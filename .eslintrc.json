@@ -79,7 +79,7 @@
         "no-underscore-dangle": [
             1,
             {
-                "allow": [],
+                "allow": ["_attr"],
                 "allowAfterThis": false,
                 "allowAfterSuper": false
             }
@@ -168,12 +168,7 @@
                     "x",
                     "y",
                     "ii",
-                    "tx",
-                    "id",
-                    "to",
-                    "_",
-                    "db",
-                    "DB"
+                    "id"
                 ]
             }
         ],

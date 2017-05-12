@@ -1,0 +1,6 @@
+{
+    "route": {
+        "creteRoom": "/api/room/create-room",
+        "getRooms": "/api/room/get-rooms"
+    }
+}

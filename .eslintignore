@@ -4,6 +4,9 @@
 # npm
 node_modules
 
+# test dir
+/www/
+
 # example
 # /* eslint-disable no-unused-vars */
 # var React = require('react');
