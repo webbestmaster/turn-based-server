@@ -11,7 +11,7 @@ const roomsHashMap = {
 
 // TODO: add check if user get/set filed users
 const attr = {
-    users: 'users_'
+    users: 'users'
 };
 
 class Room {
@@ -63,6 +63,23 @@ class Room {
 
         room.set(attr.users, users.filter(user => user.publicId !== publicId));
         // TODO: is it was last user -> destroy the room
+    }
+
+    setUserState(privateUserId, key, value) {
+        const room = this;
+        const publicId = generatePublicId(privateUserId);
+        const users = room.get(attr.users);
+        const user = _.find(users, {publicId});
+
+        if (!user) {
+            return {
+                error: 'User is NOT exists'
+            };
+        }
+
+        user[key] = value;
+
+        return {};
     }
 }
 

@@ -19,6 +19,7 @@ fsServer.bindRequest('get', apiRoute.route.joinRoom, action.joinRoom, null);
 fsServer.bindRequest('get', apiRoute.route.leaveRoom, action.leaveRoom, null);
 fsServer.bindRequest('get', apiRoute.route.getRoomState, action.getRoomState, null);
 fsServer.bindRequest('post', apiRoute.route.setRoomState, action.setRoomState, null);
+fsServer.bindRequest('post', apiRoute.route.setUserRoomState, action.setUserRoomState, null);
 
 // run server
 fsServer.run();
