@@ -15,6 +15,7 @@ const action = require('./action');
 // Room api
 fsServer.bindRequest('post', apiRoute.route.creteRoom, action.reateRoom, null);
 fsServer.bindRequest('get', apiRoute.route.getRooms, action.getRooms, null);
+fsServer.bindRequest('get', apiRoute.route.joinRoom, action.joinRoom, null);
 
 // run server
 fsServer.run();
