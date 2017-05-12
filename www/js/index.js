@@ -5,9 +5,14 @@
 window.tb.ajax.post('/api/room/create-room').then(res => console.log(res));
 window.tb.ajax.get('/api/room/get-rooms').then(res => console.log(res));
 
-setTimeout(() => {
+setTimeout(() =>
+        window.tb.ajax
+            .get('/api/room/join-room/1/privateUserId')
+            .then(res => console.log(res)),
+    1e3);
 
-    window.tb.ajax.get('/api/room/join-room/1/privateUserId').then(res => console.log(res));
-
-
-}, 1e3);
+setTimeout(() =>
+        window.tb.ajax
+            .get('/api/room/leave-room/1/privateUserId')
+            .then(res => console.log(res)),
+    2e3);

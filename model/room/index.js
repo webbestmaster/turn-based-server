@@ -55,6 +55,15 @@ class Room {
             publicId
         };
     }
+
+    leave(privateUserId) {
+        const room = this;
+        const publicId = generatePublicId(privateUserId);
+        const users = room.get(attr.users);
+
+        room.set(attr.users, users.filter(user => user.publicId !== publicId));
+        // TODO: is it was last user -> destroy the room
+    }
 }
 
 module.exports.Room = Room;

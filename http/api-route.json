@@ -2,6 +2,7 @@
     "route": {
         "creteRoom": "/api/room/create-room",
         "getRooms": "/api/room/get-rooms",
-        "joinRoom": "/api/room/join-room/:roomId/:privateUserId"
+        "joinRoom": "/api/room/join-room/:roomId/:privateUserId",
+        "leaveRoom": "/api/room/leave-room/:roomId/:privateUserId"
     }
 }
