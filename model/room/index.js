@@ -1,9 +1,9 @@
 'use strict';
 
+/* global setTimeout, clearTimeout */
 const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');
 const _ = require('lodash');
-
 
 const roomsHashMap = {
     rooms: {}
@@ -23,6 +23,24 @@ class Room {
         room.set(attr.users, []);
 
         roomsHashMap.rooms[room.get('id')] = room;
+    }
+
+    ping(privateUserId) {
+        const room = this;
+        const publicId = generatePublicId(privateUserId);
+        const users = room.get(attr.users);
+        const user = _.find(users, {publicId});
+
+        if (!user) {
+            return {
+                error: 'User is NOT exists'
+            };
+        }
+
+        clearTimeout(user.leaveTimeoutId);
+        user.leaveTimeoutId = setTimeout(() => room.leave(privateUserId), 5e3);
+
+        return {};
     }
 
     get(key) {
@@ -47,9 +65,14 @@ class Room {
             };
         }
 
+        console.log('join user ', privateUserId);
+
         users.push({
-            publicId
+            publicId,
+            leaveTimeoutId: -1
         });
+
+        room.ping(privateUserId);
 
         return {
             publicId
@@ -61,8 +84,12 @@ class Room {
         const publicId = generatePublicId(privateUserId);
         const users = room.get(attr.users);
 
+        console.log('leave user ', privateUserId);
+
         room.set(attr.users, users.filter(user => user.publicId !== publicId));
-        // TODO: is it was last user -> destroy the room
+        if (room.get(attr.users).length === 0) {
+            room.destroy();
+        }
     }
 
     setUserState(privateUserId, key, value) {
@@ -80,6 +107,21 @@ class Room {
         user[key] = value;
 
         return {};
+    }
+
+    destroy() {
+        const room = this;
+        const users = room.get(attr.users);
+        const roomId = room.get('id');
+
+        users.map(user => {
+            clearTimeout(user.leaveTimeoutId);
+            return null;
+        });
+
+        room._attr = null;
+        Reflect.deleteProperty(roomsHashMap.rooms, roomId);
+        console.log('room destroyed', roomId);
     }
 }
 
