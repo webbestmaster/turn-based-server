@@ -4,6 +4,7 @@
 const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');
 const _ = require('lodash');
+const BaseModel = require('./../base-model');
 
 const roomsHashMap = {
     rooms: {}
@@ -13,20 +14,64 @@ const props = {
     leaveUserTimeout: 5e3
 };
 
-// TODO: add check if user get/set filed users
 const attr = {
     users: 'users'
 };
 
-class Room {
+class Room extends BaseModel {
     constructor(data) {
+        super(data);
         const room = this;
 
-        room._attr = data || {};
-        room.set('id', generateId());
-        room.set(attr.users, []);
+        room.usersServiceData = [];
+
+        room.set({
+            id: generateId(),
+            [attr.users]: []
+        });
 
         roomsHashMap.rooms[room.get('id')] = room;
+
+        room.onChange(attr.users, room.onUsersChange, room);
+    }
+
+    onUsersChange(newUsers) {
+        const room = this;
+        const {usersServiceData} = room;
+
+        // user added
+        if (usersServiceData.length < newUsers.length) {
+            newUsers.forEach(newUser => {
+                const {publicId} = newUser;
+
+                if (_.find(usersServiceData, {publicId})) {
+                    return;
+                }
+
+                usersServiceData.push({
+                    publicId,
+                    leaveTimeoutId: null
+                });
+            });
+            console.log(usersServiceData);
+            return;
+        }
+
+        // user leaved
+        if (usersServiceData.length > newUsers.length) {
+            room.usersServiceData =
+                usersServiceData.filter(userServiceData => {
+                    if (_.find(newUsers, {publicId: userServiceData.publicId})) {
+                        return true;
+                    }
+                    clearTimeout(userServiceData.leaveTimeoutId);
+                    return false;
+                });
+            console.log(usersServiceData);
+            return;
+        }
+
+        console.warn('Why triggered onUsersChange?');
     }
 
     ping(privateUserId) {
@@ -41,22 +86,17 @@ class Room {
             };
         }
 
-        clearTimeout(user.leaveTimeoutId);
-        user.leaveTimeoutId = setTimeout(
-            () => room.leave(privateUserId),
-            props.leaveUserTimeout
-        );
+        const userServiceData = _.find(room.usersServiceData, {publicId});
+
+        if (userServiceData) {
+            clearTimeout(userServiceData.leaveTimeoutId);
+            userServiceData.leaveTimeoutId = setTimeout(
+                () => room.leave(privateUserId),
+                props.leaveUserTimeout
+            );
+        }
 
         return {};
-    }
-
-    get(key) {
-        return this._attr[key];
-    }
-
-    set(key, value) {
-        this._attr[key] = value;
-        return this;
     }
 
     join(privateUserId) {
@@ -75,9 +115,10 @@ class Room {
         console.log('join user ', privateUserId);
 
         users.push({
-            publicId,
-            leaveTimeoutId: -1
+            publicId
         });
+
+        room.trigger(attr.users); // need to trigger service data
 
         room.ping(privateUserId);
 
@@ -95,7 +136,6 @@ class Room {
         console.log('leave user ', privateUserId);
 
         if (userToLeave) {
-            clearTimeout(userToLeave.leaveTimeoutId);
             room.set(attr.users, users.filter(user => user.publicId !== publicId));
         }
 
@@ -123,17 +163,15 @@ class Room {
 
     destroy() {
         const room = this;
-        const users = room.get(attr.users);
         const roomId = room.get('id');
 
-        users.map(user => {
-            clearTimeout(user.leaveTimeoutId);
-            return null;
-        });
+        room.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
 
-        room._attr = null;
+        room.usersServiceData = null;
         Reflect.deleteProperty(roomsHashMap.rooms, roomId);
         console.log('room destroyed', roomId);
+
+        super.destroy();
     }
 }
 

@@ -79,7 +79,7 @@
         "no-underscore-dangle": [
             1,
             {
-                "allow": ["_attr"],
+                "allow": [],
                 "allowAfterThis": false,
                 "allowAfterSuper": false
             }
