@@ -9,16 +9,20 @@ const roomsHashMap = {
     rooms: {}
 };
 
+const props = {
+    leaveUserTimeout: 5e3
+};
+
 // TODO: add check if user get/set filed users
 const attr = {
     users: 'users'
 };
 
 class Room {
-    constructor(props) {
+    constructor(data) {
         const room = this;
 
-        room._attr = props || {};
+        room._attr = data || {};
         room.set('id', generateId());
         room.set(attr.users, []);
 
@@ -38,7 +42,10 @@ class Room {
         }
 
         clearTimeout(user.leaveTimeoutId);
-        user.leaveTimeoutId = setTimeout(() => room.leave(privateUserId), 5e3);
+        user.leaveTimeoutId = setTimeout(
+            () => room.leave(privateUserId),
+            props.leaveUserTimeout
+        );
 
         return {};
     }
@@ -83,10 +90,15 @@ class Room {
         const room = this;
         const publicId = generatePublicId(privateUserId);
         const users = room.get(attr.users);
+        const userToLeave = _.find(users, {publicId});
 
         console.log('leave user ', privateUserId);
 
-        room.set(attr.users, users.filter(user => user.publicId !== publicId));
+        if (userToLeave) {
+            clearTimeout(userToLeave.leaveTimeoutId);
+            room.set(attr.users, users.filter(user => user.publicId !== publicId));
+        }
+
         if (room.get(attr.users).length === 0) {
             room.destroy();
         }
