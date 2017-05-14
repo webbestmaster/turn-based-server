@@ -4,7 +4,7 @@ const FsServer = require('fs-server');
 const serverConst = require('./server-const');
 const {httpPort} = serverConst;
 const fsServerConfig = {
-    root: './../dist/', // path to front-end part of site
+    root: './../ae3/dist/', // path to front-end part of site
     port: httpPort // optional, recommended this, or do not use this field
     // page404: 'custom-404-page/index.html' // optional, path to custom 404 page
 };
