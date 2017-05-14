@@ -1,16 +1,15 @@
 'use strict';
 
-const roomModule = require('./../../model/room');
+const roomModule = require('./../../../model/room');
 const {roomsHashMap} = roomModule;
-const util = require('./../util');
+const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, privateUserId) => {
-    res.setHeader('Content-Type', 'application/json');
-
     const room = roomsHashMap.rooms[roomId];
 
     if (room) {
         room.leave(privateUserId);
+        Object.assign(res, {statusCode: 204});
         res.end();
         return;
     }

@@ -122,9 +122,7 @@ class Room extends BaseModel {
 
         room.ping(privateUserId);
 
-        return {
-            publicId
-        };
+        return {};
     }
 
     leave(privateUserId) {

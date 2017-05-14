@@ -4,9 +4,9 @@
 
 'use strict';
 
-const roomModule = require('./../../model/room');
+const roomModule = require('./../../../model/room');
 const {roomsHashMap} = roomModule;
-const util = require('./../util');
+const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, privateUserId) => {
     util
@@ -23,6 +23,7 @@ module.exports = (req, res, url, roomId, privateUserId) => {
 
                 const result = Object.keys(data).map(key => room.setUserState(privateUserId, key, data[key]));
 
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({result}));
             } catch (evt) {
                 util.createError(res, 'Can not parse post data, should be JSON', evt);

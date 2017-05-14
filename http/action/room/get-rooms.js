@@ -1,6 +1,6 @@
 'use strict';
 
-const roomModule = require('./../../model/room');
+const roomModule = require('./../../../model/room');
 const {roomsHashMap} = roomModule;
 
 module.exports = (req, res) => {

@@ -1,8 +1,8 @@
 'use strict';
 
-const roomModule = require('./../../model/room');
+const roomModule = require('./../../../model/room');
 const {Room} = roomModule;
-const util = require('./../util');
+const util = require('./../../util');
 
 module.exports = (req, res) => {
     util
@@ -11,6 +11,7 @@ module.exports = (req, res) => {
             try {
                 const room = new Room(stringBody && JSON.parse(stringBody));
 
+                res.setHeader('Content-Type', 'application/json');
                 res.end(room.get('id'));
             } catch (evt) {
                 util.createError(res, 'Can not parse post data, should be JSON', evt);

@@ -10,19 +10,23 @@ const fsServerConfig = {
 };
 const apiRoute = require('./api-route.json');
 const fsServer = new FsServer(fsServerConfig); // create server with config
-const action = require('./action');
+const actionRoom = require('./action/room');
+const actionOther = require('./action/other');
 
 // Room api
-fsServer.bindRequest('post', apiRoute.route.creteRoom, action.reateRoom, null);
-fsServer.bindRequest('get', apiRoute.route.getRooms, action.getRooms, null);
-fsServer.bindRequest('get', apiRoute.route.joinRoom, action.joinRoom, null);
-fsServer.bindRequest('get', apiRoute.route.leaveRoom, action.leaveRoom, null);
-fsServer.bindRequest('get', apiRoute.route.getRoomState, action.getRoomState, null);
-fsServer.bindRequest('get', apiRoute.route.getRoomStates, action.getRoomStates, null);
-fsServer.bindRequest('post', apiRoute.route.setRoomState, action.setRoomState, null);
-fsServer.bindRequest('post', apiRoute.route.setUserRoomState, action.setUserRoomState, null);
-fsServer.bindRequest('get', apiRoute.route.pingUserRoom, action.pingUserRoom, null);
-fsServer.bindRequest('post', apiRoute.route.pushToRoomKey, action.pushToRoomKey, null);
+fsServer.bindRequest('post', apiRoute.route.creteRoom, actionRoom.reateRoom, null);
+fsServer.bindRequest('get', apiRoute.route.getRooms, actionRoom.getRooms, null);
+fsServer.bindRequest('get', apiRoute.route.joinRoom, actionRoom.joinRoom, null);
+fsServer.bindRequest('get', apiRoute.route.leaveRoom, actionRoom.leaveRoom, null);
+fsServer.bindRequest('get', apiRoute.route.getRoomState, actionRoom.getRoomState, null);
+fsServer.bindRequest('get', apiRoute.route.getRoomStates, actionRoom.getRoomStates, null);
+fsServer.bindRequest('post', apiRoute.route.setRoomState, actionRoom.setRoomState, null);
+fsServer.bindRequest('post', apiRoute.route.setUserRoomState, actionRoom.setUserRoomState, null);
+fsServer.bindRequest('get', apiRoute.route.pingUserRoom, actionRoom.pingUserRoom, null);
+fsServer.bindRequest('post', apiRoute.route.pushToRoomKey, actionRoom.pushToRoomKey, null);
+
+// Other api
+fsServer.bindRequest('get', apiRoute.route.getPublicId, actionOther.getPublicId, null);
 
 // run server
 fsServer.run();
