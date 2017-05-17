@@ -1,12 +1,12 @@
 'use strict';
 
-module.exports.reateRoom = require('./create-room');
-module.exports.getRooms = require('./get-rooms');
-module.exports.joinRoom = require('./join-room');
-module.exports.leaveRoom = require('./leave-room');
-module.exports.getRoomState = require('./get-room-state');
-module.exports.getRoomStates = require('./get-room-states');
-module.exports.setRoomState = require('./set-room-state');
-module.exports.setUserRoomState = require('./set-user-room-state');
-module.exports.pingUserRoom = require('./ping-user-room');
-module.exports.pushToRoomKey = require('./push-to-room-key');
+module.exports.create = require('./create');
+module.exports.getItems = require('./get-items');
+module.exports.join = require('./join');
+module.exports.leave = require('./leave');
+module.exports.getState = require('./get-state');
+module.exports.getStates = require('./get-states');
+module.exports.setState = require('./set-state');
+module.exports.setUserState = require('./set-user-state');
+module.exports.pingUser = require('./ping-user');
+module.exports.pushToKey = require('./push-to-key');

@@ -14,19 +14,19 @@ const actionRoom = require('./action/room');
 const actionOther = require('./action/other');
 
 // Room api
-fsServer.bindRequest('post', apiRoute.route.creteRoom, actionRoom.reateRoom, null);
-fsServer.bindRequest('get', apiRoute.route.getRooms, actionRoom.getRooms, null);
-fsServer.bindRequest('get', apiRoute.route.joinRoom, actionRoom.joinRoom, null);
-fsServer.bindRequest('get', apiRoute.route.leaveRoom, actionRoom.leaveRoom, null);
-fsServer.bindRequest('get', apiRoute.route.getRoomState, actionRoom.getRoomState, null);
-fsServer.bindRequest('get', apiRoute.route.getRoomStates, actionRoom.getRoomStates, null);
-fsServer.bindRequest('post', apiRoute.route.setRoomState, actionRoom.setRoomState, null);
-fsServer.bindRequest('post', apiRoute.route.setUserRoomState, actionRoom.setUserRoomState, null);
-fsServer.bindRequest('get', apiRoute.route.pingUserRoom, actionRoom.pingUserRoom, null);
-fsServer.bindRequest('post', apiRoute.route.pushToRoomKey, actionRoom.pushToRoomKey, null);
+fsServer.bindRequest('post', apiRoute.route.room.create, actionRoom.create, null);
+fsServer.bindRequest('get', apiRoute.route.room.getItems, actionRoom.getItems, null);
+fsServer.bindRequest('get', apiRoute.route.room.join, actionRoom.join, null);
+fsServer.bindRequest('get', apiRoute.route.room.leave, actionRoom.leave, null);
+fsServer.bindRequest('get', apiRoute.route.room.getState, actionRoom.getState, null);
+fsServer.bindRequest('get', apiRoute.route.room.getStates, actionRoom.getStates, null);
+fsServer.bindRequest('post', apiRoute.route.room.setState, actionRoom.setState, null);
+fsServer.bindRequest('post', apiRoute.route.room.setUserState, actionRoom.setUserState, null);
+fsServer.bindRequest('get', apiRoute.route.room.pingUser, actionRoom.pingUser, null);
+fsServer.bindRequest('post', apiRoute.route.room.pushToKey, actionRoom.pushToKey, null);
 
 // Other api
-fsServer.bindRequest('get', apiRoute.route.getPublicId, actionOther.getPublicId, null);
+fsServer.bindRequest('get', apiRoute.route.other.getPublicId, actionOther.getPublicId, null);
 
 // run server
 fsServer.run();

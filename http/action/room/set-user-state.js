@@ -1,7 +1,3 @@
-/**
- * Created by dmitry.turovtsov on 12.05.2017.
- */
-
 'use strict';
 
 const roomHashMap = require('./../../../model/room/hash-map.js');
