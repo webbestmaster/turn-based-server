@@ -16,7 +16,7 @@ module.exports = (req, res, url, roomId) => {
                     return;
                 }
 
-                Object.keys(data).forEach(key => room.set(key, data[key]));
+                room.set(data);
 
                 Object.assign(res, {statusCode: 204});
                 res.end();

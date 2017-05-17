@@ -1,10 +1,10 @@
 'use strict';
 
-const roomHashMap = require('./../../../model/room/hash-map.js');
+const gameHashMap = require('./../../../model/game/hash-map.js');
 const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, keys) => {
-    const room = roomHashMap.items[roomId];
+    const room = gameHashMap.items[roomId];
 
     if (room) {
         const result = {};
