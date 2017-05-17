@@ -12,7 +12,7 @@ module.exports = (req, res, url, roomId) => {
                 const room = roomHashMap.items[roomId];
 
                 if (!room) {
-                    util.createError(res, 'Room with ID: ' + roomId + ' is not exist.', {});
+                    util.createError(res, 'Item with ID: ' + roomId + ' is not exist.', {});
                     return;
                 }
 

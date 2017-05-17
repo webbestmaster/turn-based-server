@@ -18,5 +18,5 @@ module.exports = (req, res, url, roomId, keys) => {
         return;
     }
 
-    util.createError(res, 'Room with ID: ' + roomId + ' is not exist.', {});
+    util.createError(res, 'Item with ID: ' + roomId + ' is not exist.', {});
 };
