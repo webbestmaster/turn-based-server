@@ -4,8 +4,7 @@
 
 'use strict';
 
-const roomModule = require('./../../../model/room');
-const {roomsHashMap} = roomModule;
+const roomHashMap = require('./../../../model/room/hash-map.js');
 const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, privateUserId) => {
@@ -14,7 +13,7 @@ module.exports = (req, res, url, roomId, privateUserId) => {
         .then(stringBody => {
             try {
                 const data = stringBody ? JSON.parse(stringBody) : {};
-                const room = roomsHashMap.rooms[roomId];
+                const room = roomHashMap.items[roomId];
 
                 if (!room) {
                     util.createError(res, 'Room with ID: ' + roomId + ' is not exist.', {});

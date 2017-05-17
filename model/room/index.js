@@ -6,10 +6,6 @@ const generatePublicId = require('./../../lib/generate-public-id');
 const _ = require('lodash');
 const BaseModel = require('./../base-model');
 
-const roomsHashMap = {
-    rooms: {}
-};
-
 const props = {
     leaveUserTimeout: 5e3
 };
@@ -19,18 +15,19 @@ const attr = {
 };
 
 class Room extends BaseModel {
-    constructor(data) {
+    constructor(data, classHashMap) {
         super(data);
         const room = this;
 
         room.usersServiceData = [];
+        room.classHashMap = classHashMap;
 
         room.set({
             id: generateId(),
             [attr.users]: []
         });
 
-        roomsHashMap.rooms[room.get('id')] = room;
+        Object.assign(classHashMap.items, {[room.get('id')]: room});
 
         room.onChange(attr.users, room.onUsersChange, room);
     }
@@ -166,7 +163,10 @@ class Room extends BaseModel {
         room.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
 
         room.usersServiceData = null;
-        Reflect.deleteProperty(roomsHashMap.rooms, roomId);
+
+        Reflect.deleteProperty(room.classHashMap.items, roomId);
+        room.classHashMap = null;
+
         console.log('room destroyed', roomId);
 
         super.destroy();
@@ -174,4 +174,3 @@ class Room extends BaseModel {
 }
 
 module.exports.Room = Room;
-module.exports.roomsHashMap = roomsHashMap;

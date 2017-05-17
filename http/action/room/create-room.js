@@ -1,15 +1,18 @@
 'use strict';
 
-const roomModule = require('./../../../model/room');
-const {Room} = roomModule;
+const {Room} = require('./../../../model/room');
 const util = require('./../../util');
+const roomHashMap = require('./../../../model/room/hash-map.js');
 
 module.exports = (req, res) => {
     util
         .streamBodyParser(req)
         .then(stringBody => {
             try {
-                const room = new Room(stringBody && JSON.parse(stringBody));
+                const room = new Room(
+                    stringBody && JSON.parse(stringBody),
+                    roomHashMap
+                );
 
                 res.setHeader('Content-Type', 'application/json');
                 res.end(room.get('id'));
