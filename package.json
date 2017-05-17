@@ -7,7 +7,7 @@
     "start": "node index.js",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha ./test/api"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,10 @@
     "sha1": "^1.1.1"
   },
   "devDependencies": {
-    "eslint": "^3.19.0"
+    "chai": "^3.5.0",
+    "eslint": "^3.19.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.4.1",
+    "request": "^2.81.0"
   }
 }
