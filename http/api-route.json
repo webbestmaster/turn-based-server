@@ -11,8 +11,8 @@
             "setState": "/api/room/set-state/:roomId",
             "pushToKey": "/api/room/push-to-key/:roomId",
             "join": "/api/room/join/:roomId/:privateUserId",
-
             "leave": "/api/room/leave/:roomId/:privateUserId",
+
             "setUserState": "/api/room/set-user-state/:roomId/:privateUserId",
             "pingUser": "/api/room/ping-user/:roomId/:privateUserId"
         },

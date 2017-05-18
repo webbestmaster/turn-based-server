@@ -74,4 +74,13 @@ describe('api/room', () => {
                 get(url + apiRoute.route.room.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
             .then(result => assert.deepEqual(JSON.parse(result).result, [{publicId: publicUserId}]));
     });
+
+    it('leave', () => {
+        return get(
+            url + apiRoute.route.room.leave.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId)
+        )
+            .then(() =>
+                get(url + apiRoute.route.room.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
+            .then(result => assert.property(JSON.parse(result), 'error'));
+    });
 });
