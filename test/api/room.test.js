@@ -95,19 +95,19 @@ describe('api/room', () => {
 
         this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
 
+        function pingUser() {
+            return get(route.pingUser
+                .replace(':roomId', testRoomId)
+                .replace(':privateUserId', privateUserId))
+                .then(result => assert(result === ''));
+        }
+
         post(route.create)
             .then(roomId => {
                 testRoomId = roomId;
                 return get(route.join.replace(':roomId', testRoomId).replace(':privateUserId', privateUserId));
             })
             .then(() => {
-                function pingUser() {
-                    return get(route.pingUser
-                        .replace(':roomId', testRoomId)
-                        .replace(':privateUserId', privateUserId))
-                        .then(result => assert(result === ''));
-                }
-
                 const setIntervalId = setInterval(pingUser, 1e3);
 
                 setTimeout(() => {
