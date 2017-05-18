@@ -1,8 +1,8 @@
-/* global describe, it */
+/* global describe, it, clearInterval, setTimeout, setInterval */
 'use strict';
 
 const {get, post} = require('./../util');
-// const request = require('request');
+const roomProps = require('./../../model/room').props;
 const {assert} = require('chai');
 const constant = require('./../const.json');
 const {url} = constant;
@@ -22,10 +22,7 @@ describe('api/room', () => {
     const publicUserId = generatePublicId(privateUserId);
 
     it('create room', () => {
-        return get({
-            url: route.create,
-            method: 'post'
-        }).then(roomId => {
+        return post(route.create).then(roomId => {
             firstRoomId = roomId;
             assert(/\d+/.test(roomId));
         });
@@ -90,5 +87,45 @@ describe('api/room', () => {
         return get(route.leave.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId))
             .then(() => get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
             .then(result => assert.property(JSON.parse(result), 'error'));
+    });
+
+    it('ping user', function withTimeOut(done) {
+        const {leaveUserTimeout} = roomProps;
+        let testRoomId = '';
+
+        this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
+
+        post(route.create)
+            .then(roomId => {
+                testRoomId = roomId;
+                return get(route.join.replace(':roomId', testRoomId).replace(':privateUserId', privateUserId));
+            })
+            .then(() => {
+                function pingUser() {
+                    return get(route.pingUser
+                        .replace(':roomId', testRoomId)
+                        .replace(':privateUserId', privateUserId))
+                        .then(result => assert(result === ''));
+                }
+
+                const setIntervalId = setInterval(pingUser, 1e3);
+
+                setTimeout(() => {
+                    // check room for exists
+                    get(route.getItems)
+                        .then(roomsId => assert(JSON.parse(roomsId).indexOf(testRoomId) !== -1));
+
+                    clearInterval(setIntervalId);
+                }, leaveUserTimeout * 2); // ping server some time
+
+                setTimeout(() => {
+                    // check room for NOT exists
+                    get(route.getItems)
+                        .then(roomsId => {
+                            assert(JSON.parse(roomsId).indexOf(testRoomId) === -1);
+                            done();
+                        });
+                }, leaveUserTimeout * 4); // ping server some time
+            });
     });
 });
