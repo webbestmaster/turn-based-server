@@ -7,10 +7,13 @@ const {assert} = require('chai');
 const constant = require('./../const.json');
 const {url} = constant;
 const apiRoute = require('./../../http/api-route.json');
+const generatePublicId = require('./../../lib/generate-public-id');
 
 describe('api/room', () => {
     let firstRoomId = '';
     let secondRoomId = '';
+    const privateUserId = 'private-user-id-1234567890';
+    const publicUserId = generatePublicId(privateUserId);
 
     it('create room', () => {
         return get({
@@ -61,5 +64,14 @@ describe('api/room', () => {
             .then(() => post(url + apiRoute.route.room.pushToKey.replace(':roomId', firstRoomId), {arr: 'secondValue'}))
             .then(() => get(url + apiRoute.route.room.getState.replace(':roomId', firstRoomId).replace(':key', 'arr')))
             .then(result => assert.deepEqual(JSON.parse(result).result, ['firstValue', 'secondValue']));
+    });
+
+    it('join', () => {
+        return get(
+            url + apiRoute.route.room.join.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId)
+        )
+            .then(() =>
+                get(url + apiRoute.route.room.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
+            .then(result => assert.deepEqual(JSON.parse(result).result, [{publicId: publicUserId}]));
     });
 });

@@ -170,3 +170,4 @@ class Room extends BaseModel {
 }
 
 module.exports.Room = Room;
+// module.exports.props = props;
