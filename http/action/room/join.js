@@ -7,10 +7,9 @@ module.exports = (req, res, url, roomId, privateUserId) => {
     const room = roomHashMap.items[roomId];
 
     if (room) {
-        const joinResult = room.join(privateUserId);
-
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(joinResult));
+        room.join(privateUserId);
+        Object.assign(res, {statusCode: 204});
+        res.end();
         return;
     }
 

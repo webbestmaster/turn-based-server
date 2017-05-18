@@ -103,10 +103,8 @@ class Room extends BaseModel {
 
         const user = _.find(users, {publicId});
 
-        if (user) {
-            return {
-                error: 'User already exists'
-            };
+        if (user) { // user already exists
+            return;
         }
 
         console.log('join user ', privateUserId);
@@ -118,8 +116,6 @@ class Room extends BaseModel {
         room.trigger(attr.users); // need to trigger service data
 
         room.ping(privateUserId);
-
-        return {};
     }
 
     leave(privateUserId) {
