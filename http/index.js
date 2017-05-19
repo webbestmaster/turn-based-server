@@ -13,6 +13,9 @@ const fsServer = new FsServer(fsServerConfig); // create server with config
 const actionRoom = require('./action/room');
 const actionOther = require('./action/other');
 
+// Other api
+fsServer.bindRequest('get', apiRoute.route.other.getPublicId, actionOther.getPublicId, null);
+
 // Room api
 fsServer.bindRequest('post', apiRoute.route.room.create, actionRoom.create, null);
 fsServer.bindRequest('get', apiRoute.route.room.getItems, actionRoom.getItems, null);
@@ -24,8 +27,5 @@ fsServer.bindRequest('post', apiRoute.route.room.setState, actionRoom.setState, 
 fsServer.bindRequest('post', apiRoute.route.room.setUserState, actionRoom.setUserState, null);
 fsServer.bindRequest('get', apiRoute.route.room.pingUser, actionRoom.pingUser, null);
 fsServer.bindRequest('post', apiRoute.route.room.pushToKey, actionRoom.pushToKey, null);
-
-// Other api
-fsServer.bindRequest('get', apiRoute.route.other.getPublicId, actionOther.getPublicId, null);
 
 module.exports = fsServer;
