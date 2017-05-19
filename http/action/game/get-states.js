@@ -1,16 +1,16 @@
 'use strict';
 
-const gameHashMap = require('./../../../model/game/hash-map.js');
+const instanceHashMap = require('./../../../model/game/hash-map.js');
 const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, keys) => {
-    const room = gameHashMap.items[roomId];
+    const instance = instanceHashMap.items[roomId];
 
-    if (room) {
+    if (instance) {
         const result = {};
 
         keys.split(',')
-            .forEach(key => Object.assign(result, {[key]: room.get(key)}));
+            .forEach(key => Object.assign(result, {[key]: instance.get(key)}));
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({result}));

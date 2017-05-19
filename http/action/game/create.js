@@ -1,21 +1,21 @@
 'use strict';
 
-const {Game} = require('./../../../model/game');
+const {Room} = require('./../../../model/game');
 const util = require('./../../util');
-const gameHashMap = require('./../../../model/game/hash-map.js');
+const instanceHashMap = require('./../../../model/game/hash-map.js');
 
 module.exports = (req, res) => {
     util
         .streamBodyParser(req)
         .then(stringBody => {
             try {
-                const room = new Game(
+                const instance = new Room(
                     stringBody && JSON.parse(stringBody),
-                    gameHashMap
+                    instanceHashMap
                 );
 
                 res.setHeader('Content-Type', 'application/json');
-                res.end(room.get('id'));
+                res.end(instance.get('id'));
             } catch (evt) {
                 util.createError(res, 'Can not parse post data, should be JSON', evt);
             }

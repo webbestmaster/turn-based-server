@@ -1,13 +1,13 @@
 'use strict';
 
-const roomHashMap = require('./../../../model/room/hash-map.js');
+const instanceHashMap = require('./../../../model/room/hash-map.js');
 const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, privateUserId) => {
-    const room = roomHashMap.items[roomId];
+    const instance = instanceHashMap.items[roomId];
 
-    if (room) {
-        room.join(privateUserId);
+    if (instance) {
+        instance.join(privateUserId);
         Object.assign(res, {statusCode: 204});
         res.end();
         return;

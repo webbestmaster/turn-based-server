@@ -1,6 +1,6 @@
 'use strict';
 
-const roomHashMap = require('./../../../model/room/hash-map.js');
+const instanceHashMap = require('./../../../model/room/hash-map.js');
 const util = require('./../../util');
 
 module.exports = (req, res, url, roomId, privateUserId) => {
@@ -9,16 +9,16 @@ module.exports = (req, res, url, roomId, privateUserId) => {
         .then(stringBody => {
             try {
                 const data = stringBody ? JSON.parse(stringBody) : {};
-                const room = roomHashMap.items[roomId];
+                const instance = instanceHashMap.items[roomId];
 
-                if (!room) {
+                if (!instance) {
                     util.createError(res, 'Item with ID: ' + roomId + ' is not exist.', {});
                     return;
                 }
 
                 Object
                     .keys(data)
-                    .map(key => room.setUserState(privateUserId, key, data[key]));
+                    .map(key => instance.setUserState(privateUserId, key, data[key]));
 
                 Object.assign(res, {statusCode: 204});
                 res.end();
