@@ -17,24 +17,24 @@ const attr = {
 class Room extends BaseModel {
     constructor(data, classHashMap) {
         super(data);
-        const room = this;
+        const model = this;
 
-        room.usersServiceData = [];
-        room.classHashMap = classHashMap;
+        model.usersServiceData = [];
+        model.classHashMap = classHashMap;
 
-        room.set({
+        model.set({
             id: generateId(),
             [attr.users]: []
         });
 
-        Object.assign(classHashMap.items, {[room.get('id')]: room});
+        Object.assign(classHashMap.items, {[model.get('id')]: model});
 
-        room.onChange(attr.users, room.onUsersChange, room);
+        model.onChange(attr.users, model.onUsersChange, model);
     }
 
     onUsersChange(newUsers) {
-        const room = this;
-        const {usersServiceData} = room;
+        const model = this;
+        const {usersServiceData} = model;
 
         // user added
         if (usersServiceData.length < newUsers.length) {
@@ -56,7 +56,7 @@ class Room extends BaseModel {
 
         // user leaved
         if (usersServiceData.length > newUsers.length) {
-            room.usersServiceData =
+            model.usersServiceData =
                 usersServiceData.filter(userServiceData => {
                     if (_.find(newUsers, {publicId: userServiceData.publicId})) {
                         return true;
@@ -72,9 +72,9 @@ class Room extends BaseModel {
     }
 
     ping(privateUserId) {
-        const room = this;
+        const model = this;
         const publicId = generatePublicId(privateUserId);
-        const users = room.get(attr.users);
+        const users = model.get(attr.users);
         const user = _.find(users, {publicId});
 
         if (!user) {
@@ -83,12 +83,12 @@ class Room extends BaseModel {
             };
         }
 
-        const userServiceData = _.find(room.usersServiceData, {publicId});
+        const userServiceData = _.find(model.usersServiceData, {publicId});
 
         if (userServiceData) {
             clearTimeout(userServiceData.leaveTimeoutId);
             userServiceData.leaveTimeoutId = setTimeout(
-                () => room.leave(privateUserId),
+                () => model.leave(privateUserId),
                 props.leaveUserTimeout
             );
         }
@@ -97,9 +97,9 @@ class Room extends BaseModel {
     }
 
     join(privateUserId) {
-        const room = this;
+        const model = this;
         const publicId = generatePublicId(privateUserId);
-        const users = room.get(attr.users);
+        const users = model.get(attr.users);
 
         const user = _.find(users, {publicId});
 
@@ -113,32 +113,32 @@ class Room extends BaseModel {
             publicId
         });
 
-        room.trigger(attr.users); // need to trigger service data
+        model.trigger(attr.users); // need to trigger service data
 
-        room.ping(privateUserId);
+        model.ping(privateUserId);
     }
 
     leave(privateUserId) {
-        const room = this;
+        const model = this;
         const publicId = generatePublicId(privateUserId);
-        const users = room.get(attr.users);
+        const users = model.get(attr.users);
         const userToLeave = _.find(users, {publicId});
 
         console.log('leave user ', privateUserId);
 
         if (userToLeave) {
-            room.set(attr.users, users.filter(user => user.publicId !== publicId));
+            model.set(attr.users, users.filter(user => user.publicId !== publicId));
         }
 
-        if (room.get(attr.users).length === 0) {
-            room.destroy();
+        if (model.get(attr.users).length === 0) {
+            model.destroy();
         }
     }
 
     setUserState(privateUserId, key, value) {
-        const room = this;
+        const model = this;
         const publicId = generatePublicId(privateUserId);
-        const users = room.get(attr.users);
+        const users = model.get(attr.users);
         const user = _.find(users, {publicId});
 
         if (!user) {
@@ -153,17 +153,17 @@ class Room extends BaseModel {
     }
 
     destroy() {
-        const room = this;
-        const instanceId = room.get('id');
+        const model = this;
+        const instanceId = model.get('id');
 
-        room.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
+        model.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
 
-        room.usersServiceData = null;
+        model.usersServiceData = null;
 
-        Reflect.deleteProperty(room.classHashMap.items, instanceId);
-        room.classHashMap = null;
+        Reflect.deleteProperty(model.classHashMap.items, instanceId);
+        model.classHashMap = null;
 
-        console.log('room destroyed', instanceId);
+        console.log('model destroyed', instanceId);
 
         super.destroy();
     }
