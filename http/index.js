@@ -28,5 +28,4 @@ fsServer.bindRequest('post', apiRoute.route.room.pushToKey, actionRoom.pushToKey
 // Other api
 fsServer.bindRequest('get', apiRoute.route.other.getPublicId, actionOther.getPublicId, null);
 
-// run server
-fsServer.run();
+module.exports = fsServer;

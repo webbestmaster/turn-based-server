@@ -1,6 +1,6 @@
 # turn-based-server
 Turn-based game server
 
-> npm start // run server
+> $ npm start - to start
 
-> npm test
+> $ npm test - to run test
