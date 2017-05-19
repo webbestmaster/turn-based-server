@@ -90,8 +90,7 @@ class BaseModel {
         const argsLength = arguments.length;
 
         if (Array.isArray(key)) {
-            key.forEach(keyFromList => model.offChange(keyFromList, action, context));
-
+            key.forEach(keyFromList => model.offChange(keyFromList));
             return model;
         }
 
