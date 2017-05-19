@@ -10,8 +10,11 @@ const props = {
     leaveUserTimeout: 5e3
 };
 
+// here is 'private' properties
 const attr = {
-    users: 'users'
+    id: 'id',
+    users: 'users',
+    currentUserIndex: 'currentUserIndex'
 };
 
 class Room extends BaseModel {
@@ -24,7 +27,8 @@ class Room extends BaseModel {
 
         model.set({
             id: generateId(),
-            [attr.users]: []
+            [attr.users]: [],
+            [attr.currentUserIndex]: 0
         });
 
         Object.assign(classHashMap.items, {[model.get('id')]: model});
@@ -127,6 +131,7 @@ class Room extends BaseModel {
         console.log('leave user ', privateUserId);
 
         if (userToLeave) {
+            model.leaveTurn(privateUserId);
             model.set(attr.users, users.filter(user => user.publicId !== publicId));
         }
 
@@ -166,6 +171,25 @@ class Room extends BaseModel {
         console.log('model destroyed', instanceId);
 
         super.destroy();
+    }
+
+    // game part
+    leaveTurn(privateUserId) {
+        const model = this;
+        const publicId = generatePublicId(privateUserId);
+        const users = model.get(attr.users);
+        const currentUserIndex = model.get(attr.currentUserIndex);
+        const currentUser = users[currentUserIndex];
+
+        if (currentUser.publicId !== publicId) {
+            return;
+        }
+
+        if (currentUserIndex === users.length - 1) {
+            model.set(attr.currentUserIndex, 0);
+        } else {
+            model.changeBy(attr.currentUserIndex, 1);
+        }
     }
 }
 
