@@ -10,3 +10,4 @@ module.exports.setState = require('./set-state');
 module.exports.setUserState = require('./set-user-state');
 module.exports.pingUser = require('./ping-user');
 module.exports.pushToKey = require('./push-to-key');
+module.exports.leaveTurn = require('./leave-turn');

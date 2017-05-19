@@ -20,6 +20,8 @@ describe('api/room', () => {
     let secondRoomId = '';
     const privateUserId = 'private-user-id-1234567890';
     const publicUserId = generatePublicId(privateUserId);
+    const privateSecondUserId = 'private-user-id-second-1234567890';
+    // const publicSecondUserId = generatePublicId(privateUserId);
 
     it('create room', () => {
         return post(route.create).then(instanceId => {
@@ -126,6 +128,78 @@ describe('api/room', () => {
                             done();
                         });
                 }, leaveUserTimeout * 4); // ping server some time
+            });
+    });
+
+    it('leave turn by user', () => {
+        let roomId = '';
+
+        return post(route.create)
+            .then(instanceId => {
+                roomId = instanceId;
+            })
+            // join users
+            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
+            // check current currentUserIndex
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 0))
+            // leave turn
+            .then(() => get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 1))
+            // leave turn by the same user
+            .then(() => get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 1))
+            // leave turn by the second user
+            .then(() =>
+                get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 0))
+            // leave turn by first user
+            .then(() => get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 1))
+            // leave room by second user
+            .then(() => get(route.leave.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
+            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
+            .then(result => assert(JSON.parse(result).result === 0));
+    });
+
+    it('leave turn by disconnect', function withTimeOut(done) {
+        let roomId = '';
+        const {leaveUserTimeout} = roomProps;
+
+        this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
+
+        function pingUser() {
+            return get(route.pingUser
+                .replace(':instanceId', roomId)
+                .replace(':privateUserId', privateUserId))
+                .then(result => assert(result === ''));
+        }
+
+        post(route.create)
+            .then(instanceId => {
+                roomId = instanceId;
+            })
+            // join users
+            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
+            // leave turn by first user
+            .then(() => get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
+            .then(() => {
+                const setIntervalId = setInterval(pingUser, 1e3);
+
+                setTimeout(() => {
+                    get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'))
+                        .then(result => assert(JSON.parse(result).result === 0))
+                        .then(() => {
+                            clearInterval(setIntervalId);
+                            done();
+                        });
+                }, leaveUserTimeout * 2);
             });
     });
 });

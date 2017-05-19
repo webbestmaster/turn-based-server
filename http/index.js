@@ -27,5 +27,6 @@ fsServer.bindRequest('post', apiRoute.route.room.setState, actionRoom.setState, 
 fsServer.bindRequest('post', apiRoute.route.room.setUserState, actionRoom.setUserState, null);
 fsServer.bindRequest('get', apiRoute.route.room.pingUser, actionRoom.pingUser, null);
 fsServer.bindRequest('post', apiRoute.route.room.pushToKey, actionRoom.pushToKey, null);
+fsServer.bindRequest('get', apiRoute.route.room.leaveTurn, actionRoom.leaveTurn, null);
 
 module.exports = fsServer;

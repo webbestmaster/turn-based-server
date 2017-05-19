@@ -181,6 +181,11 @@ class Room extends BaseModel {
         const currentUserIndex = model.get(attr.currentUserIndex);
         const currentUser = users[currentUserIndex];
 
+        if (!currentUser) {
+            model.set(attr.currentUserIndex, 0);
+            return;
+        }
+
         if (currentUser.publicId !== publicId) {
             return;
         }
