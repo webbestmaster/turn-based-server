@@ -3,16 +3,16 @@
 const instanceHashMap = require('./../../../model/game/hash-map.js');
 const util = require('./../../util');
 
-module.exports = (req, res, url, roomId, privateUserId) => {
+module.exports = (req, res, url, instanceId, privateUserId) => {
     util
         .streamBodyParser(req)
         .then(stringBody => {
             try {
                 const data = stringBody ? JSON.parse(stringBody) : {};
-                const instance = instanceHashMap.items[roomId];
+                const instance = instanceHashMap.items[instanceId];
 
                 if (!instance) {
-                    util.createError(res, 'Item with ID: ' + roomId + ' is not exist.', {});
+                    util.createError(res, 'Item with ID: ' + instanceId + ' is not exist.', {});
                     return;
                 }
 

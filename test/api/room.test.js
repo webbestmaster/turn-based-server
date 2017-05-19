@@ -22,17 +22,17 @@ describe('api/room', () => {
     const publicUserId = generatePublicId(privateUserId);
 
     it('create room', () => {
-        return post(route.create).then(roomId => {
-            firstRoomId = roomId;
-            assert(/\d+/.test(roomId));
+        return post(route.create).then(instanceId => {
+            firstRoomId = instanceId;
+            assert(/\d+/.test(instanceId));
         });
     });
 
     it('create room with parameters', () => {
         return post(route.create, {key: 'value'})
-            .then(roomId => {
-                secondRoomId = roomId;
-                return get(route.getState.replace(':roomId', secondRoomId).replace(':key', 'key'));
+            .then(instanceId => {
+                secondRoomId = instanceId;
+                return get(route.getState.replace(':instanceId', secondRoomId).replace(':key', 'key'));
             })
             .then(result => assert(JSON.parse(result).result === 'value'));
     });
@@ -46,13 +46,13 @@ describe('api/room', () => {
     });
 
     it('set/get room state(s)', () => {
-        return post(route.setState.replace(':roomId', firstRoomId), {
+        return post(route.setState.replace(':instanceId', firstRoomId), {
             key1: 'value1',
             key2: 'value2'
         })
             .then(() => Promise.all([
-                get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'key1')),
-                get(route.getStates.replace(':roomId', firstRoomId).replace(':keys', 'key1,key2'))
+                get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'key1')),
+                get(route.getStates.replace(':instanceId', firstRoomId).replace(':keys', 'key1,key2'))
             ]))
             .then(([result, results]) => {
                 assert(JSON.parse(result).result === 'value1');
@@ -61,22 +61,22 @@ describe('api/room', () => {
     });
 
     it('push to key', () => {
-        return post(route.setState.replace(':roomId', firstRoomId), {arr: ['firstValue']})
-            .then(() => post(route.pushToKey.replace(':roomId', firstRoomId), {arr: 'secondValue'}))
-            .then(() => get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'arr')))
+        return post(route.setState.replace(':instanceId', firstRoomId), {arr: ['firstValue']})
+            .then(() => post(route.pushToKey.replace(':instanceId', firstRoomId), {arr: 'secondValue'}))
+            .then(() => get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'arr')))
             .then(result => assert.deepEqual(JSON.parse(result).result, ['firstValue', 'secondValue']));
     });
 
     it('join', () => {
-        return get(route.join.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId))
-            .then(() => get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
+        return get(route.join.replace(':instanceId', firstRoomId).replace(':privateUserId', privateUserId))
+            .then(() => get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users')))
             .then(result => assert.deepEqual(JSON.parse(result).result, [{publicId: publicUserId}]));
     });
 
     it('set user state', () => {
-        return post(route.setUserState.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId),
+        return post(route.setUserState.replace(':instanceId', firstRoomId).replace(':privateUserId', privateUserId),
             {userKey: 'userValue'})
-            .then(() => get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
+            .then(() => get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users')))
             .then(result => assert.deepEqual(JSON.parse(result).result, [{
                 publicId: publicUserId,
                 userKey: 'userValue'
@@ -84,8 +84,8 @@ describe('api/room', () => {
     });
 
     it('leave', () => {
-        return get(route.leave.replace(':roomId', firstRoomId).replace(':privateUserId', privateUserId))
-            .then(() => get(route.getState.replace(':roomId', firstRoomId).replace(':key', 'users')))
+        return get(route.leave.replace(':instanceId', firstRoomId).replace(':privateUserId', privateUserId))
+            .then(() => get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users')))
             .then(result => assert.property(JSON.parse(result), 'error'));
     });
 
@@ -97,15 +97,15 @@ describe('api/room', () => {
 
         function pingUser() {
             return get(route.pingUser
-                .replace(':roomId', testRoomId)
+                .replace(':instanceId', testRoomId)
                 .replace(':privateUserId', privateUserId))
                 .then(result => assert(result === ''));
         }
 
         post(route.create)
-            .then(roomId => {
-                testRoomId = roomId;
-                return get(route.join.replace(':roomId', testRoomId).replace(':privateUserId', privateUserId));
+            .then(instanceId => {
+                testRoomId = instanceId;
+                return get(route.join.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
             })
             .then(() => {
                 const setIntervalId = setInterval(pingUser, 1e3);

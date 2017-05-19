@@ -154,16 +154,16 @@ class Room extends BaseModel {
 
     destroy() {
         const room = this;
-        const roomId = room.get('id');
+        const instanceId = room.get('id');
 
         room.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
 
         room.usersServiceData = null;
 
-        Reflect.deleteProperty(room.classHashMap.items, roomId);
+        Reflect.deleteProperty(room.classHashMap.items, instanceId);
         room.classHashMap = null;
 
-        console.log('room destroyed', roomId);
+        console.log('room destroyed', instanceId);
 
         super.destroy();
     }

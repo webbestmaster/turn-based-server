@@ -3,8 +3,8 @@
 const instanceHashMap = require('./../../../model/room/hash-map.js');
 const util = require('./../../util');
 
-module.exports = (req, res, url, roomId, keys) => {
-    const instance = instanceHashMap.items[roomId];
+module.exports = (req, res, url, instanceId, keys) => {
+    const instance = instanceHashMap.items[instanceId];
 
     if (instance) {
         const result = {};
@@ -17,5 +17,5 @@ module.exports = (req, res, url, roomId, keys) => {
         return;
     }
 
-    util.createError(res, 'Item with ID: ' + roomId + ' is not exist.', {});
+    util.createError(res, 'Item with ID: ' + instanceId + ' is not exist.', {});
 };
