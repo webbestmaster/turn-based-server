@@ -5,6 +5,9 @@
 node_modules
 
 # test dir
+/reports-cover/
+
+# test dir
 /www/
 
 # example
