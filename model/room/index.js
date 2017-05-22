@@ -181,6 +181,14 @@ class Room extends BaseModel {
         const currentUserIndex = model.get(attr.currentUserIndex);
         const currentUser = users[currentUserIndex];
 
+        // FIXME
+        // if we have only ONE user - stop game cause we have a winner
+        if (users.length === 1) {
+            model.set(attr.currentUserIndex, -1);
+            setTimeout(() => model.set(attr.currentUserIndex, 0), props.leaveUserTimeout);
+            return;
+        }
+
         if (!currentUser) {
             model.set(attr.currentUserIndex, 0);
             return;
