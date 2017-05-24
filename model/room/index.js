@@ -14,7 +14,8 @@ const props = {
 const attr = {
     id: 'id',
     users: 'users',
-    currentUserIndex: 'currentUserIndex'
+    currentUserIndex: 'currentUserIndex',
+    turns: 'turns'
 };
 
 class Room extends BaseModel {
@@ -28,7 +29,8 @@ class Room extends BaseModel {
         model.set({
             id: generateId(),
             [attr.users]: [],
-            [attr.currentUserIndex]: 0
+            [attr.currentUserIndex]: 0,
+            [attr.turns]: []
         });
 
         Object.assign(classHashMap.items, {[model.get('id')]: model});
@@ -203,6 +205,31 @@ class Room extends BaseModel {
         } else {
             model.changeBy(attr.currentUserIndex, 1);
         }
+    }
+
+    pushTurn(privateUserId, data) {
+        const model = this;
+        const publicId = generatePublicId(privateUserId);
+        const users = model.get(attr.users);
+        const currentUserIndex = model.get(attr.currentUserIndex);
+        const currentUser = users[currentUserIndex];
+
+        if (!currentUser || currentUser.publicId !== publicId) {
+            return {
+                error: 'You can not push turn, please try again'
+            };
+        }
+
+        const turns = model.get(attr.turns);
+
+        const turn = {
+            hash: JSON.stringify(data) + turns.length,
+            turn: data
+        };
+
+        turns.push(turn);
+
+        return {};
     }
 }
 
