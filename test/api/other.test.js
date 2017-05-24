@@ -15,6 +15,6 @@ describe('api/other', () => {
     it('get public id', async () => {
         const publicId = await get(route.getPublicId.replace(':privateUserId', constant.privateUserId));
 
-        assert(publicId === 'public-id-7d9d163d366e5abdcfc48331a4bb9581b8f07b7f');
+        assert(publicId === constant.publicUserId);
     });
 });

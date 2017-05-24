@@ -1,4 +1,5 @@
 {
     "url": "http://localhost:3000",
-    "privateUserId": "private-user-id-0123456789"
+    "privateUserId": "private-user-id-0123456789",
+    "publicUserId": "public-id-7d9d163d366e5abdcfc48331a4bb9581b8f07b7f"
 }
