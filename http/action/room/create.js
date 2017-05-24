@@ -1,5 +1,3 @@
-'use strict';
-
 const {Room} = require('./../../../model/room');
 const util = require('./../../util');
 const instanceHashMap = require('./../../../model/room/hash-map.js');

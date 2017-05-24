@@ -1,5 +1,3 @@
-'use strict';
-
 const instanceHashMap = require('./../../../model/room/hash-map.js');
 
 module.exports = (req, res) => {

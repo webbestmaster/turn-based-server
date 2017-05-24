@@ -1,5 +1,3 @@
-'use strict';
-
 const generatePublicId = require('./../../../lib/generate-public-id');
 
 module.exports = (req, res, url, key) => {

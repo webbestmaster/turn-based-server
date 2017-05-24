@@ -1,5 +1,3 @@
-'use strict';
-
 const instanceHashMap = require('./../../../model/room/hash-map.js');
 const util = require('./../../util');
 

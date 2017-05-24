@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports.create = require('./create');
 module.exports.getItems = require('./get-items');
 module.exports.join = require('./join');

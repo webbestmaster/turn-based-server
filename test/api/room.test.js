@@ -1,6 +1,4 @@
 /* global describe, it, clearInterval, setTimeout, setInterval */
-'use strict';
-
 const {get, post} = require('./../util');
 const roomProps = require('./../../model/room').props;
 const {assert} = require('chai');

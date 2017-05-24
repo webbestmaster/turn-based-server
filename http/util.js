@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports.createError = (res, text, evt) => {
     console.error({text, evt});
     Object.assign(res, {statusCode: 500});

@@ -1,5 +1,3 @@
-'use strict';
-
 const FsServer = require('fs-server');
 const serverConst = require('./server-const');
 const {httpPort} = serverConst;

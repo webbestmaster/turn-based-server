@@ -1,6 +1,4 @@
 /* global describe, it */
-'use strict';
-
 const {get} = require('./../util');
 const {assert} = require('chai');
 const constant = require('./../const.json');
@@ -14,8 +12,9 @@ Object.keys(otherRoute)
         Object.assign(route, {[key]: url + otherRoute[key]}));
 
 describe('api/other', () => {
-    it('get public id', () =>
-        get(route.getPublicId.replace(':privateUserId', constant.privateUserId))
-            .then(body => assert(body === 'public-id-7d9d163d366e5abdcfc48331a4bb9581b8f07b7f'))
-    );
+    it('get public id', async () => {
+        const publicId = await get(route.getPublicId.replace(':privateUserId', constant.privateUserId));
+
+        assert(publicId === 'public-id-7d9d163d366e5abdcfc48331a4bb9581b8f07b7f');
+    });
 });

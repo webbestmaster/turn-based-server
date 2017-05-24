@@ -1,5 +1,3 @@
-'use strict';
-
 /* global module */
 /* eslint-disable no-underscore-dangle */
 

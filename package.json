@@ -25,6 +25,7 @@
     "sha1": "^1.1.1"
   },
   "devDependencies": {
+    "babel-eslint": "^7.2.3",
     "chai": "^3.5.0",
     "eslint": "^3.19.0",
     "istanbul": "^0.4.5",

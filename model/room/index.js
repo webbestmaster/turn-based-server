@@ -1,5 +1,3 @@
-'use strict';
-
 /* global setTimeout, clearTimeout */
 const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');

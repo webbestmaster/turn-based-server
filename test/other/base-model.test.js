@@ -1,5 +1,3 @@
-'use strict';
-
 /* global describe, it, beforeEach, afterEach */
 /* eslint no-invalid-this: 0 */
 
