@@ -91,44 +91,42 @@ describe('api/room', () => {
         assert.property(JSON.parse(result), 'error');
     });
 
-    it.skip('ping user', function withTimeOut(done) {
+    it('ping user', async function withTimeOut() {
         const {leaveUserTimeout} = roomProps;
-        let testRoomId = '';
 
         this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
 
-        function pingUser() {
-            return get(route.pingUser
-                .replace(':instanceId', testRoomId)
-                .replace(':privateUserId', privateUserId))
-                .then(result => assert(result === ''));
+        const testRoomId = await post(route.create);
+
+        async function pingUser() {
+            const result = await get(route.pingUser
+                .replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
+
+            assert(result === '');
         }
 
-        post(route.create)
-            .then(instanceId => {
-                testRoomId = instanceId;
-                return get(route.join.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
-            })
-            .then(() => {
-                const setIntervalId = setInterval(pingUser, 1e3);
+        await get(route.join.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
 
-                setTimeout(() => {
-                    // check room for exists
-                    get(route.getItems)
-                        .then(roomsId => assert(JSON.parse(roomsId).indexOf(testRoomId) !== -1));
+        const setIntervalId = setInterval(pingUser, 1e3);
 
-                    clearInterval(setIntervalId);
-                }, leaveUserTimeout * 2); // ping server some time
+        setTimeout(async () => {
+            // check room for exists
+            const roomsId = await get(route.getItems);
 
-                setTimeout(() => {
-                    // check room for NOT exists
-                    get(route.getItems)
-                        .then(roomsId => {
-                            assert(JSON.parse(roomsId).indexOf(testRoomId) === -1);
-                            done();
-                        });
-                }, leaveUserTimeout * 4); // ping server some time
-            });
+            assert(JSON.parse(roomsId).indexOf(testRoomId) !== -1);
+
+            clearInterval(setIntervalId);
+        }, leaveUserTimeout * 2); // ping server some time
+
+        await new Promise(resolve =>
+            setTimeout(async () => {
+                // check room for NOT exists
+                const roomsId = await get(route.getItems);
+
+                assert(JSON.parse(roomsId).indexOf(testRoomId) === -1);
+                resolve();
+            }, leaveUserTimeout * 4) // ping server some time
+        );
     });
 
     it('leave/push turn by user', () => {
@@ -213,11 +211,12 @@ describe('api/room', () => {
 
         this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
 
-        function pingUser() {
-            return get(route.pingUser
+        async function pingUser() {
+            const result = await get(route.pingUser
                 .replace(':instanceId', roomId)
-                .replace(':privateUserId', privateUserId))
-                .then(result => assert(result === ''));
+                .replace(':privateUserId', privateUserId));
+
+            assert(result === '');
         }
 
         post(route.create)
