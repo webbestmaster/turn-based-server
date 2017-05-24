@@ -129,87 +129,73 @@ describe('api/room', () => {
         );
     });
 
-    it('leave/push turn by user', () => {
-        let roomId = '';
+    it('leave/push turn by user', async () => { // eslint-disable-line max-statements
+        const roomId = await post(route.create);
 
-        return post(route.create)
-            .then(instanceId => {
-                roomId = instanceId;
-            })
-            // join users
-            .then(() =>
-                get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() =>
-                get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
-            // check current currentUserIndex
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result =>
-                assert(JSON.parse(result).result === 0))
-            // push turn
-            .then(() =>
-                post(
-                    route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
-                    {myTurnKey: 'myTurnValue'}
-                ))
-            // check push turn
-            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns')))
-            .then(result => assert.deepEqual(JSON.parse(result).result[0].turn, {myTurnKey: 'myTurnValue'}))
-            // leave turn
-            .then(() =>
-                get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result => assert(JSON.parse(result).result === 1))
-            // push turn if no users turn
-            .then(() =>
-                post(
-                    route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
-                    {myTurnKey: 'myTurnValue'}
-                ))
-            .then(result => assert.property(JSON.parse(result), 'error'))
-            // check push turn if no users turn
-            .then(() => get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns')))
-            .then(result => {
-                const turns = JSON.parse(result).result;
+        // join users
+        await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
 
-                assert(turns.length === 1);
-                assert.deepEqual(turns[0].turn, {myTurnKey: 'myTurnValue'});
-            })
-            // leave turn by the same user
-            .then(() =>
-                get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result => assert(JSON.parse(result).result === 1))
-            // leave turn by the second user
-            .then(() =>
-                get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result =>
-                assert(JSON.parse(result).result === 0))
-            // leave turn by first user
-            .then(() =>
-                get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result =>
-                assert(JSON.parse(result).result === 1))
-            // leave room by second user
-            .then(() =>
-                get(route.leave.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
-            .then(() =>
-                get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex')))
-            .then(result =>
-                assert(JSON.parse(result).result === 0));
+        // check current currentUserIndex
+        let result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+
+        assert(JSON.parse(result).result === 0);
+
+        // push turn
+        await post(
+            route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
+            {myTurnKey: 'myTurnValue'}
+        );
+        // check push turn
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns'));
+        assert.deepEqual(JSON.parse(result).result[0].turn, {myTurnKey: 'myTurnValue'});
+
+        // leave turn
+        await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        assert(JSON.parse(result).result === 1);
+
+        // push turn if no users turn
+        result = await post(
+            route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
+            {myTurnKey: 'myTurnValue'}
+        );
+        assert.property(JSON.parse(result), 'error');
+
+        // check push turn if no users turn
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns'));
+        const turns = JSON.parse(result).result;
+
+        assert(turns.length === 1);
+        assert.deepEqual(turns[0].turn, {myTurnKey: 'myTurnValue'});
+
+        // leave turn by the same user
+        await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        assert(JSON.parse(result).result === 1);
+
+        // leave turn by the second user
+        await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        assert(JSON.parse(result).result === 0);
+
+        // leave turn by first user
+        await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        assert(JSON.parse(result).result === 1);
+
+        // leave room by second user
+        await get(route.leave.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        assert(JSON.parse(result).result === 0);
     });
 
-    it.skip('leave turn by disconnect', function withTimeOut(done) {
-        let roomId = '';
+    it('leave turn by disconnect', async function withTimeOut() {
         const {leaveUserTimeout} = roomProps;
 
         this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
+
+        const roomId = await post(route.create);
 
         async function pingUser() {
             const result = await get(route.pingUser
@@ -219,26 +205,25 @@ describe('api/room', () => {
             assert(result === '');
         }
 
-        post(route.create)
-            .then(instanceId => {
-                roomId = instanceId;
-            })
-            // join users
-            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() => get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId)))
-            // leave turn by first user
-            .then(() => get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId)))
-            .then(() => {
-                const setIntervalId = setInterval(pingUser, 1e3);
+        // join users
+        await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
 
-                setTimeout(() => {
-                    get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'))
-                        .then(result => assert(JSON.parse(result).result === 0))
-                        .then(() => {
-                            clearInterval(setIntervalId);
-                            done();
-                        });
-                }, leaveUserTimeout * 2);
-            });
+        // leave turn by first user
+        await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
+        const setIntervalId = setInterval(pingUser, 1e3);
+
+        await new Promise(resolve =>
+            setTimeout(async () => {
+                const result =
+                    await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+
+                assert(JSON.parse(result).result === 0);
+
+                clearInterval(setIntervalId);
+
+                resolve();
+            }, leaveUserTimeout * 2)
+        );
     });
 });
