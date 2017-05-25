@@ -129,7 +129,7 @@ describe('api/room', () => {
         );
     });
 
-    it('leave/push turn by user', async () => { // eslint-disable-line max-statements
+    it('leave/push/get turn by user', async () => { // eslint-disable-line max-statements
         const roomId = await post(route.create);
 
         // join users
@@ -164,7 +164,7 @@ describe('api/room', () => {
 
         // check push turn if no users turn
         result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns'));
-        const turns = JSON.parse(result).result;
+        let turns = JSON.parse(result).result;
 
         assert(turns.length === 1);
         assert.deepEqual(turns[0].turn, {myTurnKey: 'myTurnValue'});
@@ -188,6 +188,29 @@ describe('api/room', () => {
         await get(route.leave.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
         result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
         assert(JSON.parse(result).result === 0);
+
+        // push turn
+        await post(
+            route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
+            {myTurnKey2: 'myTurnValue2'}
+        );
+
+        // get all turns
+        result = await get(route.getTurns.replace(':instanceId', roomId).replace(':hash', 'all'));
+        turns = JSON.parse(result).result.turns;
+        assert(turns.length === 2);
+
+        const firstTurnHash = turns[0].hash;
+
+        // get turns from defined hash
+        result = await get(route.getTurns.replace(':instanceId', roomId).replace(':hash', firstTurnHash));
+        turns = JSON.parse(result).result.turns;
+        assert(turns.length === 1);
+        assert(turns[0].hash !== firstTurnHash);
+
+        // get turn from non exists hash
+        result = await get(route.getTurns.replace(':instanceId', roomId).replace(':hash', 'non-existing-hash'));
+        assert.property(JSON.parse(result), 'error');
     });
 
     it('leave turn by disconnect', async function withTimeOut() {

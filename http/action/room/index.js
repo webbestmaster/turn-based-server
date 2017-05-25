@@ -10,3 +10,4 @@ module.exports.pingUser = require('./ping-user');
 module.exports.pushToKey = require('./push-to-key');
 module.exports.leaveTurn = require('./leave-turn');
 module.exports.pushTurn = require('./push-turn');
+module.exports.getTurns = require('./get-turns');

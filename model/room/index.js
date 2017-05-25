@@ -1,7 +1,8 @@
 /* global setTimeout, clearTimeout */
 const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');
-const _ = require('lodash');
+const generateTurnId = require('./../../lib/generate-turn-id');
+const find = require('lodash/find');
 const BaseModel = require('./../base-model');
 
 const props = {
@@ -45,7 +46,7 @@ class Room extends BaseModel {
             newUsers.forEach(newUser => {
                 const {publicId} = newUser;
 
-                if (_.find(usersServiceData, {publicId})) {
+                if (find(usersServiceData, {publicId})) {
                     return;
                 }
 
@@ -62,7 +63,7 @@ class Room extends BaseModel {
         if (usersServiceData.length > newUsers.length) {
             model.usersServiceData =
                 usersServiceData.filter(userServiceData => {
-                    if (_.find(newUsers, {publicId: userServiceData.publicId})) {
+                    if (find(newUsers, {publicId: userServiceData.publicId})) {
                         return true;
                     }
                     clearTimeout(userServiceData.leaveTimeoutId);
@@ -79,7 +80,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const user = _.find(users, {publicId});
+        const user = find(users, {publicId});
 
         if (!user) {
             return {
@@ -87,7 +88,7 @@ class Room extends BaseModel {
             };
         }
 
-        const userServiceData = _.find(model.usersServiceData, {publicId});
+        const userServiceData = find(model.usersServiceData, {publicId});
 
         if (userServiceData) {
             clearTimeout(userServiceData.leaveTimeoutId);
@@ -105,7 +106,7 @@ class Room extends BaseModel {
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
 
-        const user = _.find(users, {publicId});
+        const user = find(users, {publicId});
 
         if (user) { // user already exists
             return;
@@ -126,7 +127,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const userToLeave = _.find(users, {publicId});
+        const userToLeave = find(users, {publicId});
 
         console.log('leave user ', privateUserId);
 
@@ -144,7 +145,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const user = _.find(users, {publicId});
+        const user = find(users, {publicId});
 
         if (!user) {
             return {
@@ -221,13 +222,32 @@ class Room extends BaseModel {
         const turns = model.get(attr.turns);
 
         const turn = {
-            hash: JSON.stringify(data) + turns.length,
+            hash: generateTurnId(JSON.stringify(data)),
             turn: data
         };
 
         turns.push(turn);
 
         return {};
+    }
+
+    getTurns(hash) {
+        const model = this;
+        const turns = model.get(attr.turns);
+
+        if (hash === 'all') {
+            return turns;
+        }
+
+        const turn = find(turns, {hash});
+
+        if (!turn) {
+            return {
+                error: 'Has no turn with hash: ' + hash
+            };
+        }
+
+        return turns.slice(turns.indexOf(turn) + 1);
     }
 }
 
