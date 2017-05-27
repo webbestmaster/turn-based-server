@@ -12,7 +12,6 @@ module.exports = (req, res) => {
                     instanceHashMap
                 );
 
-                res.setHeader('Content-Type', 'application/json');
                 res.end(instance.get('id'));
             } catch (evt) {
                 util.createError(res, 'Can not parse post data, should be JSON', evt);
