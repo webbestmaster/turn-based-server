@@ -14,15 +14,15 @@ module.exports = (req, res, url, instanceId, privateUserId) => {
                     return;
                 }
 
-                const pushResult = instance.pushTurn(privateUserId, data);
+                const result = instance.pushTurn(privateUserId, data);
 
-                if (pushResult.error) {
-                    util.createError(res, pushResult.error, {});
+                if (result.error) {
+                    util.createError(res, result.error, {});
                     return;
                 }
 
-                Object.assign(res, {statusCode: 204});
-                res.end();
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({result}));
             } catch (evt) {
                 util.createError(res, 'Can not parse post data, should be JSON', evt);
             }

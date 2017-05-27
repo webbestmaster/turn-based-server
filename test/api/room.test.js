@@ -190,10 +190,12 @@ describe('api/room', () => {
         assert(JSON.parse(result).result === 0);
 
         // push turn
-        await post(
+        const pushTurnResult = await post(
             route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
             {myTurnKey2: 'myTurnValue2'}
         );
+
+        assert.property(JSON.parse(pushTurnResult).result, 'hash');
 
         // get all turns
         result = await get(route.getTurns.replace(':instanceId', roomId).replace(':hash', 'all'));

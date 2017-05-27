@@ -221,14 +221,16 @@ class Room extends BaseModel {
 
         const turns = model.get(attr.turns);
 
+        const hash = generateTurnId(JSON.stringify(data));
+
         const turn = {
-            hash: generateTurnId(JSON.stringify(data)),
-            turn: data
+            turn: data,
+            hash
         };
 
         turns.push(turn);
 
-        return {};
+        return {hash};
     }
 
     getTurns(hash) {
