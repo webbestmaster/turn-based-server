@@ -55,6 +55,7 @@ class Room extends BaseModel {
                     leaveTimeoutId: null
                 });
             });
+            console.log('join user');
             console.log(usersServiceData);
             return;
         }
@@ -69,6 +70,7 @@ class Room extends BaseModel {
                     clearTimeout(userServiceData.leaveTimeoutId);
                     return false;
                 });
+            console.log('leave user');
             console.log(usersServiceData);
             return;
         }
@@ -126,18 +128,25 @@ class Room extends BaseModel {
     leave(privateUserId) {
         const model = this;
         const publicId = generatePublicId(privateUserId);
-        const users = model.get(attr.users);
+        let users = model.get(attr.users);
         const userToLeave = find(users, {publicId});
 
         console.log('leave user ', privateUserId);
 
-        if (userToLeave) {
-            model.leaveTurn(privateUserId);
-            model.set(attr.users, users.filter(user => user.publicId !== publicId));
+        if (!userToLeave) {
+            return;
         }
+
+        model.leaveTurn(privateUserId);
+        users = model.get(attr.users);
+        const currentUser = users[model.get(attr.currentUserIndex)];
+
+        model.set(attr.users, users.filter(user => user.publicId !== publicId));
 
         if (model.get(attr.users).length === 0) {
             model.destroy();
+        } else {
+            model.set(attr.currentUserIndex, model.get(attr.users).indexOf(currentUser));
         }
     }
 
@@ -182,6 +191,7 @@ class Room extends BaseModel {
         const currentUserIndex = model.get(attr.currentUserIndex);
         const currentUser = users[currentUserIndex];
 
+
         // FIXME
         // if we have only ONE user - stop game cause we have a winner
         if (users.length === 1) {
@@ -191,6 +201,7 @@ class Room extends BaseModel {
         }
 
         if (!currentUser) {
+            console.warn('how it happen?');
             model.set(attr.currentUserIndex, 0);
             return;
         }
