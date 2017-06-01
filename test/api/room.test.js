@@ -16,10 +16,10 @@ Object.keys(roomRoute)
 describe('api/room', () => {
     let firstRoomId = '';
     let secondRoomId = '';
-    const privateUserId = 'private-user-id-1234567890';
+    const privateUserId = constant.privateUserId;
     const publicUserId = generatePublicId(privateUserId);
-    const privateSecondUserId = 'private-user-id-second-1234567890';
-    // const publicSecondUserId = generatePublicId(privateUserId);
+    const privateSecondUserId = 'private-user-id-second-9876543210';
+    const publicSecondUserId = generatePublicId(privateSecondUserId);
 
     it('create room', async () => {
         firstRoomId = await post(route.create);
@@ -136,12 +136,13 @@ describe('api/room', () => {
         await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
         await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
 
-        // check current currentUserIndex
-        let result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+        // check current currentUserPublicId
+        await post(route.setState.replace(':instanceId', roomId), {currentUserPublicId: publicUserId});
+        let result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
 
-        assert(JSON.parse(result).result === 0);
+        assert(JSON.parse(result).result === publicUserId);
 
-        // push turn
+        // first user push turn
         await post(
             route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
             {myTurnKey: 'myTurnValue'}
@@ -150,10 +151,10 @@ describe('api/room', () => {
         result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turns'));
         assert.deepEqual(JSON.parse(result).result[0].turn, {myTurnKey: 'myTurnValue'});
 
-        // leave turn
+        // first user leave turn
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
-        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
-        assert(JSON.parse(result).result === 1);
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
+        assert(JSON.parse(result).result === publicSecondUserId);
 
         // push turn if no users turn
         result = await post(
@@ -171,23 +172,23 @@ describe('api/room', () => {
 
         // leave turn by the same user
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
-        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
-        assert(JSON.parse(result).result === 1);
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
+        assert(JSON.parse(result).result === publicSecondUserId);
 
         // leave turn by the second user
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
-        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
-        assert(JSON.parse(result).result === 0);
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
+        assert(JSON.parse(result).result === publicUserId);
 
         // leave turn by first user
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
-        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
-        assert(JSON.parse(result).result === 1);
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
+        assert(JSON.parse(result).result === publicSecondUserId);
 
         // leave room by second user
         await get(route.leave.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
-        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
-        assert(JSON.parse(result).result === 0);
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
+        assert(JSON.parse(result).result === publicUserId);
 
         // push turn
         const pushTurnResult = await post(
@@ -234,6 +235,11 @@ describe('api/room', () => {
         await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
         await get(route.join.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
 
+        // currentUserPublicId
+        await post(route.setState.replace(':instanceId', roomId), {
+            currentUserPublicId: publicUserId
+        });
+
         // leave turn by first user
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
         const setIntervalId = setInterval(pingUser, 1e3);
@@ -241,9 +247,9 @@ describe('api/room', () => {
         await new Promise(resolve =>
             setTimeout(async () => {
                 const result =
-                    await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserIndex'));
+                    await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
 
-                assert(JSON.parse(result).result === 0);
+                assert(JSON.parse(result).result === publicUserId);
 
                 clearInterval(setIntervalId);
 

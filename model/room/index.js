@@ -13,7 +13,7 @@ const props = {
 const attr = {
     id: 'id',
     users: 'users',
-    currentUserIndex: 'currentUserIndex',
+    currentUserPublicId: 'currentUserPublicId',
     turns: 'turns'
 };
 
@@ -28,7 +28,7 @@ class Room extends BaseModel {
         model.set({
             id: generateId(),
             [attr.users]: [],
-            [attr.currentUserIndex]: 0,
+            [attr.currentUserPublicId]: '',
             [attr.turns]: []
         });
 
@@ -55,8 +55,6 @@ class Room extends BaseModel {
                     leaveTimeoutId: null
                 });
             });
-            console.log('join user');
-            console.log(usersServiceData);
             return;
         }
 
@@ -70,8 +68,6 @@ class Room extends BaseModel {
                     clearTimeout(userServiceData.leaveTimeoutId);
                     return false;
                 });
-            console.log('leave user');
-            console.log(usersServiceData);
             return;
         }
 
@@ -114,8 +110,6 @@ class Room extends BaseModel {
             return;
         }
 
-        console.log('join user ', privateUserId);
-
         users.push({
             publicId
         });
@@ -128,25 +122,19 @@ class Room extends BaseModel {
     leave(privateUserId) {
         const model = this;
         const publicId = generatePublicId(privateUserId);
-        let users = model.get(attr.users);
+        const users = model.get(attr.users);
         const userToLeave = find(users, {publicId});
-
-        console.log('leave user ', privateUserId);
 
         if (!userToLeave) {
             return;
         }
 
         model.leaveTurn(privateUserId);
-        users = model.get(attr.users);
-        const currentUser = users[model.get(attr.currentUserIndex)];
 
         model.set(attr.users, users.filter(user => user.publicId !== publicId));
 
         if (model.get(attr.users).length === 0) {
             model.destroy();
-        } else {
-            model.set(attr.currentUserIndex, model.get(attr.users).indexOf(currentUser));
         }
     }
 
@@ -188,21 +176,18 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const currentUserIndex = model.get(attr.currentUserIndex);
-        const currentUser = users[currentUserIndex];
+        const currentUserPublicId = model.get(attr.currentUserPublicId);
+        const currentUser = find(users, {publicId: currentUserPublicId});
 
+        if (!currentUser) {
+            return;
+        }
 
         // FIXME
         // if we have only ONE user - stop game cause we have a winner
         if (users.length === 1) {
-            model.set(attr.currentUserIndex, -1);
-            setTimeout(() => model.set(attr.currentUserIndex, 0), props.leaveUserTimeout);
-            return;
-        }
-
-        if (!currentUser) {
-            console.warn('how it happen?');
-            model.set(attr.currentUserIndex, 0);
+            model.set(attr.currentUserPublicId, '');
+            setTimeout(() => model.set(attr.currentUserPublicId, publicId), props.leaveUserTimeout);
             return;
         }
 
@@ -210,10 +195,12 @@ class Room extends BaseModel {
             return;
         }
 
+        const currentUserIndex = users.indexOf(currentUser);
+
         if (currentUserIndex === users.length - 1) {
-            model.set(attr.currentUserIndex, 0);
+            model.set(attr.currentUserPublicId, users[0].publicId);
         } else {
-            model.changeBy(attr.currentUserIndex, 1);
+            model.set(attr.currentUserPublicId, users[currentUserIndex + 1].publicId);
         }
     }
 
@@ -221,8 +208,8 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const currentUserIndex = model.get(attr.currentUserIndex);
-        const currentUser = users[currentUserIndex];
+        const currentUserPublicId = model.get(attr.currentUserPublicId);
+        const currentUser = find(users, {publicId: currentUserPublicId});
 
         if (!currentUser || currentUser.publicId !== publicId) {
             return {
