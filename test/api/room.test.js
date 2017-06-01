@@ -142,6 +142,10 @@ describe('api/room', () => {
 
         assert(JSON.parse(result).result === publicUserId);
 
+        // check turn counter
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turnCounter'));
+        assert(JSON.parse(result).result === 1);
+
         // first user push turn
         await post(
             route.pushTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId),
@@ -155,6 +159,10 @@ describe('api/room', () => {
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));
         result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
         assert(JSON.parse(result).result === publicSecondUserId);
+
+        // check turn counter
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turnCounter'));
+        assert(JSON.parse(result).result === 2);
 
         // push turn if no users turn
         result = await post(
@@ -179,6 +187,10 @@ describe('api/room', () => {
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateSecondUserId));
         result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'currentUserPublicId'));
         assert(JSON.parse(result).result === publicUserId);
+
+        // check turn counter
+        result = await get(route.getState.replace(':instanceId', roomId).replace(':key', 'turnCounter'));
+        assert(JSON.parse(result).result === 3);
 
         // leave turn by first user
         await get(route.leaveTurn.replace(':instanceId', roomId).replace(':privateUserId', privateUserId));

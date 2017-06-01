@@ -14,6 +14,7 @@ const attr = {
     id: 'id',
     users: 'users',
     currentUserPublicId: 'currentUserPublicId',
+    turnCounter: 'turnCounter',
     turns: 'turns'
 };
 
@@ -29,12 +30,14 @@ class Room extends BaseModel {
             id: generateId(),
             [attr.users]: [],
             [attr.currentUserPublicId]: '',
-            [attr.turns]: []
+            [attr.turns]: [],
+            [attr.turnCounter]: 0
         });
 
         Object.assign(classHashMap.items, {[model.get('id')]: model});
 
         model.onChange(attr.users, model.onUsersChange, model);
+        model.onChange(attr.currentUserPublicId, () => model.changeBy(attr.turnCounter, 1), model);
     }
 
     onUsersChange(newUsers) {
