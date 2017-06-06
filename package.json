@@ -23,6 +23,7 @@
   "dependencies": {
     "fs-server": "0.0.4",
     "lodash": "^4.17.4",
+    "main-model": "^0.0.1",
     "sha1": "^1.1.1"
   },
   "devDependencies": {

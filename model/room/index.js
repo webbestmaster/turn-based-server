@@ -3,7 +3,7 @@ const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');
 const generateTurnId = require('./../../lib/generate-turn-id');
 const find = require('lodash/find');
-const BaseModel = require('./../base-model');
+const BaseModel = require('main-model');
 
 const props = {
     leaveUserTimeout: 5e3
