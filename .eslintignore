@@ -10,6 +10,9 @@ node_modules
 # test dir
 /www/
 
+# front dist
+/front/
+
 # example
 # /* eslint-disable no-unused-vars */
 # var React = require('react');

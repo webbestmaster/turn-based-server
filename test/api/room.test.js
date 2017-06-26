@@ -66,9 +66,15 @@ describe('api/room', () => {
 
     it('join', async () => {
         await get(route.join.replace(':instanceId', firstRoomId).replace(':privateUserId', privateUserId));
-        const result = await get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users'));
+        let result = await get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users'));
 
-        assert.deepEqual(JSON.parse(result).result, [{publicId: publicUserId}]);
+        result = JSON.parse(result).result;
+
+        const {pingTimeStamp} = result[0];
+
+        assert(typeof pingTimeStamp === 'number');
+        assert(pingTimeStamp > 0);
+        assert.deepEqual(result, [{publicId: publicUserId, pingTimeStamp}]);
     });
 
     it('set user state', async () => {
@@ -76,11 +82,14 @@ describe('api/room', () => {
             route.setUserState.replace(':instanceId', firstRoomId).replace(':privateUserId', privateUserId),
             {userKey: 'userValue'}
         );
-        const result = await get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users'));
+        let result = await get(route.getState.replace(':instanceId', firstRoomId).replace(':key', 'users'));
 
-        assert.deepEqual(JSON.parse(result).result, [{
+        result = JSON.parse(result).result;
+
+        assert.deepEqual(result, [{
             publicId: publicUserId,
-            userKey: 'userValue'
+            userKey: 'userValue',
+            pingTimeStamp: result[0].pingTimeStamp
         }]);
     });
 

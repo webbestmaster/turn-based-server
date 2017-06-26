@@ -1,9 +1,10 @@
-/* global setTimeout, clearTimeout */
+/* global setTimeout */
 const generateId = require('./../../lib/generate-id');
 const generatePublicId = require('./../../lib/generate-public-id');
 const generateTurnId = require('./../../lib/generate-turn-id');
 const find = require('lodash/find');
 const BaseModel = require('main-model');
+const {UserServiceData} = require('./user-service-data');
 
 const props = {
     leaveUserTimeout: 5e3
@@ -13,6 +14,7 @@ const props = {
 const attr = {
     id: 'id',
     users: 'users',
+    pingTimeStamp: 'pingTimeStamp',
     currentUserPublicId: 'currentUserPublicId',
     turnCounter: 'turnCounter',
     turns: 'turns'
@@ -40,6 +42,13 @@ class Room extends BaseModel {
         model.onChange(attr.currentUserPublicId, () => model.changeBy(attr.turnCounter, 1), model);
     }
 
+    findUserServiceData(id) {
+        const model = this;
+        const {usersServiceData} = model;
+
+        return find(usersServiceData, instance => instance.getId() === id);
+    }
+
     onUsersChange(newUsers) {
         const model = this;
         const {usersServiceData} = model;
@@ -49,14 +58,15 @@ class Room extends BaseModel {
             newUsers.forEach(newUser => {
                 const {publicId} = newUser;
 
-                if (find(usersServiceData, {publicId})) {
+                if (model.findUserServiceData(publicId)) {
                     return;
                 }
 
-                usersServiceData.push({
-                    publicId,
-                    leaveTimeoutId: null
-                });
+                const userServiceData = new UserServiceData();
+
+                userServiceData.setId(publicId);
+
+                usersServiceData.push(userServiceData);
             });
             return;
         }
@@ -64,11 +74,11 @@ class Room extends BaseModel {
         // user leaved
         if (usersServiceData.length > newUsers.length) {
             model.usersServiceData =
-                usersServiceData.filter(userServiceData => {
-                    if (find(newUsers, {publicId: userServiceData.publicId})) {
+                usersServiceData.filter(instance => {
+                    if (find(newUsers, {publicId: instance.getId()})) {
                         return true;
                     }
-                    clearTimeout(userServiceData.leaveTimeoutId);
+                    instance.clearLeaveTimeOut();
                     return false;
                 });
             return;
@@ -89,14 +99,13 @@ class Room extends BaseModel {
             };
         }
 
-        const userServiceData = find(model.usersServiceData, {publicId});
+        user[attr.pingTimeStamp] = Date.now();
+
+        const userServiceData = model.findUserServiceData(publicId);
 
         if (userServiceData) {
-            clearTimeout(userServiceData.leaveTimeoutId);
-            userServiceData.leaveTimeoutId = setTimeout(
-                () => model.leave(privateUserId),
-                props.leaveUserTimeout
-            );
+            userServiceData.updateLastPing();
+            userServiceData.setLeaveTimeOut(() => model.leave(privateUserId), props.leaveUserTimeout);
         }
 
         return {};
@@ -162,7 +171,7 @@ class Room extends BaseModel {
         const model = this;
         const instanceId = model.get('id');
 
-        model.usersServiceData.forEach(userServiceData => clearTimeout(userServiceData.leaveTimeoutId));
+        model.usersServiceData.forEach(userServiceData => userServiceData.clearLeaveTimeOut());
 
         model.usersServiceData = null;
 
