@@ -2925,14 +2925,7 @@ var DisableScreen = exports.DisableScreen = function (_BaseModel) {
 
             model.onChange(attr.counter, function (counter) {
                 if (counter < 0) {
-                    /*
-                    when it happen when user get a turn
-                    but previous action still in progress
-                    TODO: try to fix it
-                     */
                     console.warn('DisableScreen counter < 0');
-                    model.set(attr.counter, 0);
-                    return;
                 }
 
                 if (counter === 0) {
@@ -2951,6 +2944,8 @@ var DisableScreen = exports.DisableScreen = function (_BaseModel) {
         key: 'onChangeCurrentUserPublicId',
         value: function onChangeCurrentUserPublicId(currentUserPublicId) {
             var model = this;
+
+            console.log('currentUserPublicId', currentUserPublicId);
 
             model.reset();
             if ((0, _me.isItNotMe)({ publicId: currentUserPublicId })) {
@@ -3088,10 +3083,8 @@ var GameView = function (_BaseView) {
         }
     }, {
         key: 'showChangeTurnPopup',
-        value: function showChangeTurnPopup() {
-            var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-            var _data$revenue = data.revenue,
-                revenue = _data$revenue === undefined ? 0 : _data$revenue;
+        value: function showChangeTurnPopup(_ref) {
+            var revenue = _ref.revenue;
 
             var view = this;
 
@@ -3138,7 +3131,10 @@ var GameView = function (_BaseView) {
 
             model.start().then(function () {
                 // model.onChange('turnCounter', (now, before) => console.log('turnCounter', before, now), view);
-                model.onChange('currentUserPublicId', function (currentUserPublicId) {
+                model.onChange('currentUserPublicId', function (currentUserPublicId, prev) {
+
+                    console.log(currentUserPublicId, prev);
+
                     model.clearAllSquares();
                     model.defineRevenue(currentUserPublicId).then(function (revenue) {
                         return view.showChangeTurnPopup({ revenue: revenue });
@@ -3151,7 +3147,8 @@ var GameView = function (_BaseView) {
                     model.checkForWin();
                     console.warn(arguments);
                 }, view);
-                view.showChangeTurnPopup();
+
+                view.showChangeTurnPopup({ revenue: 0 });
             });
         }
     }, {
@@ -3160,20 +3157,21 @@ var GameView = function (_BaseView) {
             var view = this;
 
             {/*
-                       const actions = [
-                           <FlatButton
-                               label="Cancel"
-                               primary={true}
-                               onTouchTap={() => view.handleCloseChangeTurnPopup()}
-                           />,
-                           <FlatButton
-                               label="Submit"
-                               primary={true}
-                               keyboardFocused={true}
-                               onTouchTap={() => view.handleCloseChangeTurnPopup()}
-                           />
-                       ];
-                */}
+                const actions = [
+                <FlatButton
+                label="Cancel"
+                primary={true}
+                onTouchTap={() => view.handleCloseChangeTurnPopup()}
+                />,
+                <FlatButton
+                label="Submit"
+                primary={true}
+                keyboardFocused={true}
+                onTouchTap={() => view.handleCloseChangeTurnPopup()}
+                />
+                ];
+                */
+            }
 
             return _react2.default.createElement(
                 'div',
@@ -3205,7 +3203,22 @@ var GameView = function (_BaseView) {
                     primary: true,
                     keyboardFocused: true,
                     onTouchTap: function onTouchTap() {
-                        return view.state.model.leaveTurn();
+                        var model = view.state.model;
+
+
+                        var wrongUnit = model.findWrongUnit();
+
+                        if (wrongUnit) {
+                            wrongUnit.onClick();
+                            return;
+                        }
+
+                        model.get('disableScreen').increase();
+                        model.get('promiseMaster').push(function () {
+                            return model.leaveTurn().catch(function () {
+                                return model.get('disableScreen').reset();
+                            });
+                        });
                     }
                 }),
                 _react2.default.createElement(
@@ -3649,7 +3662,9 @@ var attr = {
     usersGameData: 'usersGameData'
 };
 
-var listenKeys = [attr.currentUserPublicId, attr.users];
+var listenKeys = [
+// attr.currentUserPublicId,
+attr.users];
 
 var GameModel = exports.GameModel = function (_BaseModel) {
     _inherits(GameModel, _BaseModel);
@@ -3668,7 +3683,7 @@ var GameModel = exports.GameModel = function (_BaseModel) {
             console.warn('Game model is global, window.gameModel', window.gameModel = model);
 
             return _api2.default.post.room.setUserState(null, { money: model.get('defaultMoney') }).then(function () {
-                return model.fetchData();
+                return Promise.all([model.fetchData(), model.updateCurrentUserPublicId()]);
             }).then(function () {
                 var _model$set, _ref;
 
@@ -3748,23 +3763,27 @@ var GameModel = exports.GameModel = function (_BaseModel) {
             var disableScreen = model.get(attr.disableScreen);
             var promiseMaster = model.get(attr.promiseMaster);
 
-            disableScreen.increase();
-
             turns.forEach(function (_ref2) {
                 var list = _ref2.list;
                 return list.forEach(function (action) {
+                    promiseMaster.push(function () {
+                        return disableScreen.increase();
+                    });
                     promiseMaster.push(function () {
                         return model.doAction(action);
                     });
                     promiseMaster.push(function () {
                         return model.trigger(attr.checkAura);
                     });
+
+                    if (action.type !== 'leave-turn') {
+                        promiseMaster.push(function () {
+                            return disableScreen.decrease();
+                        });
+                    }
                 });
             });
 
-            promiseMaster.push(function () {
-                return disableScreen.decrease();
-            });
             promiseMaster.push(function () {
                 return model.checkForWin();
             });
@@ -3776,6 +3795,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
             var type = action.type;
 
             var resolved = Promise.resolve();
+
+            console.log('do-action --->', type, action);
 
             if (type === 'move') {
                 return model.doActionMove(action);
@@ -3831,6 +3852,28 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             if (type === 'destroy-building') {
                 return model.doActionDestroyBuilding(action);
+            }
+
+            if (type === 'leave-turn') {
+                var leaveTurnPublicId = action.publicId;
+
+                if (leaveTurnPublicId === (0, _me.getMyPublicId)()) {
+                    return _api2.default.get.room.leaveTurn().then(function () {
+                        return model.updateCurrentUserPublicId();
+                    });
+                }
+
+                var currentUserPublicId = model.get(attr.currentUserPublicId);
+
+                return new Promise(function (resolve) {
+                    (function wait() {
+                        model.updateCurrentUserPublicId().then(function (nextUserPublicId) {
+                            console.log('---wait---');
+                            console.log(nextUserPublicId);
+                            currentUserPublicId === nextUserPublicId ? wait() : resolve();
+                        });
+                    })();
+                });
             }
 
             return resolved;
@@ -3960,8 +4003,11 @@ var GameModel = exports.GameModel = function (_BaseModel) {
                 return Promise.resolve();
             }
 
-            return _api2.default.get.room.leaveTurn().then(function () {
-                return model.fetchData();
+            return _api2.default.post.room.pushTurn(null, {
+                list: [{
+                    type: 'leave-turn',
+                    publicId: (0, _me.getMyPublicId)()
+                }]
             });
         }
     }, {
@@ -3996,6 +4042,23 @@ var GameModel = exports.GameModel = function (_BaseModel) {
                     model.set(newKeyState);
                     _index2.store.dispatch(gameAction.setState(newKeyState));
                 });
+            });
+        }
+    }, {
+        key: 'updateCurrentUserPublicId',
+        value: function updateCurrentUserPublicId() {
+            console.log('---> updateCurrentUserPublicId');
+            var model = this;
+
+            return _api2.default.get.room.getState({ key: attr.currentUserPublicId }).then(function (_ref7) {
+                var result = _ref7.result;
+
+                var data = _defineProperty({}, attr.currentUserPublicId, result);
+
+                model.set(data);
+                _index2.store.dispatch(gameAction.setState(data));
+
+                return result;
             });
         }
     }, {
@@ -4093,10 +4156,10 @@ var GameModel = exports.GameModel = function (_BaseModel) {
     }, {
         key: 'initializeUI',
         value: function initializeUI() {
-            var _ref7;
+            var _ref8;
 
             var model = this;
-            var selectMark = new _ui.SelectMark((_ref7 = {}, _defineProperty(_ref7, attr.render, model.get(attr.render)), _defineProperty(_ref7, 'x', 1), _defineProperty(_ref7, 'y', 1), _ref7));
+            var selectMark = new _ui.SelectMark((_ref8 = {}, _defineProperty(_ref8, attr.render, model.get(attr.render)), _defineProperty(_ref8, 'x', 1), _defineProperty(_ref8, 'y', 1), _ref8));
 
             var ui = model.get(attr.ui);
 
@@ -4341,8 +4404,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var moveSquares = model.get(attr.moveSquares);
 
-            moveSquares.forEach(function (_ref8) {
-                var sprite = _ref8.sprite;
+            moveSquares.forEach(function (_ref9) {
+                var sprite = _ref9.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.moveSquares, []);
@@ -4355,8 +4418,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var attackSquares = model.get(attr.attackSquares);
 
-            attackSquares.forEach(function (_ref9) {
-                var sprite = _ref9.sprite;
+            attackSquares.forEach(function (_ref10) {
+                var sprite = _ref10.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.attackSquares, []);
@@ -4369,8 +4432,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var openShopSquares = model.get(attr.openShopSquares);
 
-            openShopSquares.forEach(function (_ref10) {
-                var sprite = _ref10.sprite;
+            openShopSquares.forEach(function (_ref11) {
+                var sprite = _ref11.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.openShopSquares, []);
@@ -4383,8 +4446,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var squares = model.get(attr.fixBuildingSquares);
 
-            squares.forEach(function (_ref11) {
-                var sprite = _ref11.sprite;
+            squares.forEach(function (_ref12) {
+                var sprite = _ref12.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.fixBuildingSquares, []);
@@ -4397,8 +4460,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var squares = model.get(attr.occupyBuildingSquares);
 
-            squares.forEach(function (_ref12) {
-                var sprite = _ref12.sprite;
+            squares.forEach(function (_ref13) {
+                var sprite = _ref13.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.occupyBuildingSquares, []);
@@ -4411,8 +4474,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var squares = model.get(attr.raiseSkeletonSquares);
 
-            squares.forEach(function (_ref13) {
-                var sprite = _ref13.sprite;
+            squares.forEach(function (_ref14) {
+                var sprite = _ref14.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.raiseSkeletonSquares, []);
@@ -4425,8 +4488,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var squares = model.get(attr.multiActionSquares);
 
-            squares.forEach(function (_ref14) {
-                var sprite = _ref14.sprite;
+            squares.forEach(function (_ref15) {
+                var sprite = _ref15.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.multiActionSquares, []);
@@ -4439,8 +4502,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
 
             var squares = model.get(attr.destroyBuildingSquares);
 
-            squares.forEach(function (_ref15) {
-                var sprite = _ref15.sprite;
+            squares.forEach(function (_ref16) {
+                var sprite = _ref16.sprite;
                 return render.removeChild('ui', sprite);
             });
             model.set(attr.destroyBuildingSquares, []);
@@ -4623,8 +4686,8 @@ var GameModel = exports.GameModel = function (_BaseModel) {
             Object.keys(teams).forEach(function (teamName) {
                 var teammatePublicIds = model.get(attr.users).filter(function (user) {
                     return user.team === teamName;
-                }).map(function (_ref16) {
-                    var publicId = _ref16.publicId;
+                }).map(function (_ref17) {
+                    var publicId = _ref17.publicId;
                     return publicId;
                 });
 
@@ -16694,6 +16757,18 @@ module.exports = {
 			"y": 11,
 			"type": "valadorn",
 			"userOrder": 1
+		},
+		{
+			"x": 11,
+			"y": 6,
+			"type": "saeth",
+			"userOrder": 2
+		},
+		{
+			"x": 1,
+			"y": 6,
+			"type": "demon-lord",
+			"userOrder": 3
 		}
 	],
 	"graves": []
