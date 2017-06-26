@@ -70,11 +70,17 @@ describe('api/room', () => {
 
         result = JSON.parse(result).result;
 
-        const {pingTimeStamp} = result[0];
+        const {pingTimeStamp, prevPingTimeStamp} = result[0];
 
         assert(typeof pingTimeStamp === 'number');
         assert(pingTimeStamp > 0);
-        assert.deepEqual(result, [{publicId: publicUserId, pingTimeStamp}]);
+
+        assert(typeof prevPingTimeStamp === 'number');
+        assert(prevPingTimeStamp > 0);
+
+        assert(prevPingTimeStamp === pingTimeStamp);
+
+        assert.deepEqual(result, [{publicId: publicUserId, pingTimeStamp, prevPingTimeStamp}]);
     });
 
     it('set user state', async () => {
@@ -86,10 +92,13 @@ describe('api/room', () => {
 
         result = JSON.parse(result).result;
 
+        const {pingTimeStamp, prevPingTimeStamp} = result[0];
+
         assert.deepEqual(result, [{
             publicId: publicUserId,
             userKey: 'userValue',
-            pingTimeStamp: result[0].pingTimeStamp
+            pingTimeStamp,
+            prevPingTimeStamp
         }]);
     });
 
@@ -136,6 +145,50 @@ describe('api/room', () => {
                 resolve();
             }, leaveUserTimeout * 4) // ping server some time
         );
+    });
+
+    it('ping prev and current last ping time stamp', async function withTimeOut() {
+        const {leaveUserTimeout} = roomProps;
+        const setTimeoutPeriod = 1e3;
+        const testRoomId = await post(route.create);
+
+        this.timeout(leaveUserTimeout * 5); // eslint-disable-line no-invalid-this
+
+        await get(route.join.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
+
+        // create first prevPingTimeStamp
+        await new Promise(resolve =>
+            setTimeout(async () => {
+                await get(route.pingUser.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
+                resolve();
+            }, setTimeoutPeriod)
+        );
+
+        let result = await get(route.getState.replace(':instanceId', testRoomId).replace(':key', 'users'));
+        let {prevPingTimeStamp, pingTimeStamp} = JSON.parse(result).result[0];
+
+        let pingDelta = pingTimeStamp - prevPingTimeStamp;
+
+        assert(pingDelta <= setTimeoutPeriod + 100);
+        assert(pingDelta >= setTimeoutPeriod - 100);
+
+        // create second prevPingTimeStamp
+        await new Promise(resolve =>
+            setTimeout(async () => {
+                await get(route.pingUser.replace(':instanceId', testRoomId).replace(':privateUserId', privateUserId));
+                resolve();
+            }, setTimeoutPeriod)
+        );
+
+        result = await get(route.getState.replace(':instanceId', testRoomId).replace(':key', 'users'));
+
+        prevPingTimeStamp = JSON.parse(result).result[0].prevPingTimeStamp;
+        pingTimeStamp = JSON.parse(result).result[0].pingTimeStamp;
+
+        pingDelta = pingTimeStamp - prevPingTimeStamp;
+
+        assert(pingDelta <= setTimeoutPeriod + 100);
+        assert(pingDelta >= setTimeoutPeriod - 100);
     });
 
     it('leave/push/get turn by user', async () => { // eslint-disable-line max-statements

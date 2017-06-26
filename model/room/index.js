@@ -14,10 +14,15 @@ const props = {
 const attr = {
     id: 'id',
     users: 'users',
-    pingTimeStamp: 'pingTimeStamp',
     currentUserPublicId: 'currentUserPublicId',
-    turnCounter: 'turnCounter',
-    turns: 'turns'
+    turns: 'turns',
+    turnCounter: 'turnCounter'
+};
+
+const userAttr = {
+    publicId: 'publicId',
+    prevPingTimeStamp: 'prevPingTimeStamp',
+    pingTimeStamp: 'pingTimeStamp'
 };
 
 class Room extends BaseModel {
@@ -29,7 +34,7 @@ class Room extends BaseModel {
         model.classHashMap = classHashMap;
 
         model.set({
-            id: generateId(),
+            [attr.id]: generateId(),
             [attr.users]: [],
             [attr.currentUserPublicId]: '',
             [attr.turns]: [],
@@ -56,7 +61,7 @@ class Room extends BaseModel {
         // user added
         if (usersServiceData.length < newUsers.length) {
             newUsers.forEach(newUser => {
-                const {publicId} = newUser;
+                const publicId = newUser[userAttr.publicId];
 
                 if (model.findUserServiceData(publicId)) {
                     return;
@@ -75,10 +80,10 @@ class Room extends BaseModel {
         if (usersServiceData.length > newUsers.length) {
             model.usersServiceData =
                 usersServiceData.filter(instance => {
-                    if (find(newUsers, {publicId: instance.getId()})) {
+                    if (find(newUsers, {[userAttr.publicId]: instance.getId()})) {
                         return true;
                     }
-                    instance.clearLeaveTimeOut();
+                    instance.destroy();
                     return false;
                 });
             return;
@@ -91,7 +96,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const user = find(users, {publicId});
+        const user = find(users, {[userAttr.publicId]: publicId});
 
         if (!user) {
             return {
@@ -99,12 +104,12 @@ class Room extends BaseModel {
             };
         }
 
-        user[attr.pingTimeStamp] = Date.now();
+        user[userAttr.prevPingTimeStamp] = user[userAttr.pingTimeStamp];
+        user[userAttr.pingTimeStamp] = Date.now();
 
         const userServiceData = model.findUserServiceData(publicId);
 
         if (userServiceData) {
-            userServiceData.updateLastPing();
             userServiceData.setLeaveTimeOut(() => model.leave(privateUserId), props.leaveUserTimeout);
         }
 
@@ -116,14 +121,16 @@ class Room extends BaseModel {
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
 
-        const user = find(users, {publicId});
+        const user = find(users, {[userAttr.publicId]: publicId});
 
         if (user) { // user already exists
             return;
         }
 
         users.push({
-            publicId
+            [userAttr.prevPingTimeStamp]: Date.now(),
+            [userAttr.pingTimeStamp]: Date.now(),
+            [userAttr.publicId]: publicId
         });
 
         model.trigger(attr.users); // need to trigger service data
@@ -135,7 +142,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const userToLeave = find(users, {publicId});
+        const userToLeave = find(users, {[userAttr.publicId]: publicId});
 
         if (!userToLeave) {
             return;
@@ -143,7 +150,7 @@ class Room extends BaseModel {
 
         model.leaveTurn(privateUserId);
 
-        model.set(attr.users, users.filter(user => user.publicId !== publicId));
+        model.set(attr.users, users.filter(user => user[userAttr.publicId] !== publicId));
 
         if (model.get(attr.users).length === 0) {
             model.destroy();
@@ -154,7 +161,7 @@ class Room extends BaseModel {
         const model = this;
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
-        const user = find(users, {publicId});
+        const user = find(users, {[userAttr.publicId]: publicId});
 
         if (!user) {
             return {
@@ -171,7 +178,7 @@ class Room extends BaseModel {
         const model = this;
         const instanceId = model.get('id');
 
-        model.usersServiceData.forEach(userServiceData => userServiceData.clearLeaveTimeOut());
+        model.usersServiceData.forEach(userServiceData => userServiceData.destroy());
 
         model.usersServiceData = null;
 
@@ -189,7 +196,7 @@ class Room extends BaseModel {
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
         const currentUserPublicId = model.get(attr.currentUserPublicId);
-        const currentUser = find(users, {publicId: currentUserPublicId});
+        const currentUser = find(users, {[userAttr.publicId]: currentUserPublicId});
 
         if (!currentUser) {
             return;
@@ -203,16 +210,16 @@ class Room extends BaseModel {
             return;
         }
 
-        if (currentUser.publicId !== publicId) {
+        if (currentUser[userAttr.publicId] !== publicId) {
             return;
         }
 
         const currentUserIndex = users.indexOf(currentUser);
 
         if (currentUserIndex === users.length - 1) {
-            model.set(attr.currentUserPublicId, users[0].publicId);
+            model.set(attr.currentUserPublicId, users[0][userAttr.publicId]);
         } else {
-            model.set(attr.currentUserPublicId, users[currentUserIndex + 1].publicId);
+            model.set(attr.currentUserPublicId, users[currentUserIndex + 1][userAttr.publicId]);
         }
     }
 
@@ -221,9 +228,9 @@ class Room extends BaseModel {
         const publicId = generatePublicId(privateUserId);
         const users = model.get(attr.users);
         const currentUserPublicId = model.get(attr.currentUserPublicId);
-        const currentUser = find(users, {publicId: currentUserPublicId});
+        const currentUser = find(users, {[userAttr.publicId]: currentUserPublicId});
 
-        if (!currentUser || currentUser.publicId !== publicId) {
+        if (!currentUser || currentUser[userAttr.publicId] !== publicId) {
             return {
                 error: 'You can not push turn, please try again'
             };

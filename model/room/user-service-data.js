@@ -3,8 +3,7 @@ const BaseModel = require('main-model');
 
 const attr = {
     id: 'id',
-    leaveTimeout: 'leaveTimeout',
-    lastPing: 'lastPing'
+    leaveTimeout: 'leaveTimeout'
 };
 
 /**
@@ -20,10 +19,10 @@ class UserServiceData extends BaseModel {
         model.setId('');
         model.setLeaveTimeOut(() => {
         }, 0);
-        model.setLastPing(0);
     }
 
     /**
+     *
      * @return {string} user public id
      */
     getId() {
@@ -67,29 +66,9 @@ class UserServiceData extends BaseModel {
         return model;
     }
 
-    /**
-     *
-     * @param {number} timestamp - last user's ping
-     * @return {UserServiceData} instance
-     */
-    setLastPing(timestamp) {
-        return this.set(attr.lastPing, timestamp);
-    }
-
-    /**
-     *
-     * @return {number} timestamp
-     */
-    getLastPing() {
-        return this.get(attr.lastPing);
-    }
-
-    /**
-     *
-     * @return {UserServiceData} instance
-     */
-    updateLastPing() {
-        return this.setLastPing(Date.now());
+    destroy() {
+        this.clearLeaveTimeOut();
+        super.destroy();
     }
 }
 
